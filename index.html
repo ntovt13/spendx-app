@@ -3383,12 +3383,11 @@ const CardShopSheet = ({ onClose, orderCard, ownedCards, kycStatus, setKycStatus
 
         {/* Card tiers */}
         {CARD_TYPES.map((card, i) => {
-          const owned = ownedCards.includes(card.id);
+          const ownedCount = ownedCards.filter(c => c.tier === card.tier).length;
           return (
             <Glass key={card.id} className={`s${Math.min(i + 1, 5)}`} style={{
               padding: 0, marginBottom: 14, overflow: "hidden",
-              border: `1px solid ${owned ? C.green + "30" : C.cardBorder + "44"}`,
-              opacity: owned ? 0.7 : 1,
+              border: `1px solid ${C.cardBorder}44`,
             }}>
               {/* Card visual with circuit skin */}
               <div style={{
@@ -3428,14 +3427,17 @@ const CardShopSheet = ({ onClose, orderCard, ownedCards, kycStatus, setKycStatus
                   <span style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{card.googleOnly ? t("googlePayOnly") : t("payAppleGoogle")}</span>
                 </div>
 
-                {/* Action button */}
-                <div style={{ marginTop: 10 }}>
-                  {owned ? (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0" }}>
-                      <Ico d={ic.check} size={14} color={C.green} sw={2.5} />
-                      <span style={{ color: C.green, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("ownedLabel")}</span>
-                    </div>
-                  ) : kycStatus !== "verified" ? (
+                {/* Owned count indicator */}
+                {ownedCount > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "6px 0 2px" }}>
+                    <Ico d={ic.check} size={12} color={C.green} sw={2.5} />
+                    <span style={{ color: C.green, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("ownedLabel")} x{ownedCount}</span>
+                  </div>
+                )}
+
+                {/* Action button - always available */}
+                <div style={{ marginTop: 8 }}>
+                  {kycStatus !== "verified" ? (
                     <PillBtn bg={C.yellow} color={C.navy} full onClick={() => setKycOpen(true)} style={{ padding: "12px 0", fontSize: 13, border: `2px solid ${C.yellow}`, boxShadow: `0 0 16px ${C.yellow}50, 0 0 4px ${C.yellow}30` }}>
                       <Ico d={ic.lock} size={14} color={C.error} sw={2} /> {t("completeKyc")}
                     </PillBtn>
@@ -4030,7 +4032,7 @@ const SkinPickerSheet = ({ card, onClose, cardSkins, setCardSkins, showToast }) 
 function SpendXMVP3() {
   const [authed, setAuthed] = useState(false);
   const [kycStatus, setKycStatus] = useState("not_started"); // not_started | pending | verified
-  const [ownedCards, setOwnedCards] = useState([]); // array of card IDs
+  const [ownedCards, setOwnedCards] = useState([]); // array of card objects (cloned from CARD_TYPES)
   const [tab, setTab] = useState("home");
   const [sheet, setSheet] = useState(null);
   const [activeCard, setActiveCard] = useState(null);
@@ -4042,6 +4044,7 @@ function SpendXMVP3() {
   const [tutorialDone, setTutorialDone] = useState({ empty: false, home: false });
   const [showTutorial, setShowTutorial] = useState(null); // null | "empty" | "home"
   const scrollRef = useRef(null);
+  const cardIdCounter = useRef(100);
   const [tgTop, setTgTop] = useState(0);
   const [toast, setToast] = useState(null);
   const [toastKey, setToastKey] = useState(0);
@@ -4056,14 +4059,23 @@ function SpendXMVP3() {
   };
   const showToast = (msg) => { setToast(msg); setToastKey(k => k + 1); setTimeout(() => setToast(null), 2300); };
 
-  const myCards = CARD_TYPES.filter(c => ownedCards.includes(c.id));
-  const orderCard = (cardId) => {
+  const myCards = ownedCards;
+  const orderCard = (tierId) => {
     if (kycStatus !== "verified") { showToast("Complete KYC first"); return false; }
-    if (ownedCards.includes(cardId)) { showToast("Card already owned"); return false; }
-    setOwnedCards(prev => [...prev, cardId]);
-    const card = CARD_TYPES.find(c => c.id === cardId);
-    if (!activeCard) setActiveCard(card);
-    showToast(`${card.tier} card ordered!`);
+    const tier = CARD_TYPES.find(c => c.id === tierId);
+    if (!tier) return false;
+    if (ownedCards.length >= 20) { showToast("Maximum 20 cards"); return false; }
+    cardIdCounter.current += 1;
+    const newCard = {
+      ...tier,
+      id: cardIdCounter.current,
+      last4: String(Math.floor(1000 + Math.random() * 9000)),
+      balance: "$0.00",
+      tx: tier.tx.map(tx => ({ ...tx })),
+    };
+    setOwnedCards(prev => [...prev, newCard]);
+    if (!activeCard) setActiveCard(newCard);
+    showToast(`${tier.tier} ${tl("cardOrdered")}`);
     return true;
   };
 
