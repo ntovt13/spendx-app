@@ -1,0 +1,4441 @@
+const { useState, useEffect, createContext, useContext, useRef } = React;
+
+/* ─── i18n TRANSLATIONS ─── */
+const T = {
+  // Navigation
+  cards: { en: "Cards", ru: "Карты", uk: "Картки", de: "Karten", es: "Tarjetas", tr: "Kartlar" },
+  spendx: { en: "SpendX", ru: "SpendX", uk: "SpendX", de: "SpendX", es: "SpendX", tr: "SpendX" },
+  settings: { en: "Settings", ru: "Настройки", uk: "Налаштування", de: "Einstellungen", es: "Ajustes", tr: "Ayarlar" },
+  // Home
+  totalBalance: { en: "Total Balance", ru: "Общий баланс", uk: "Загальний баланс", de: "Gesamtsaldo", es: "Saldo total", tr: "Toplam bakiye" },
+  topUp: { en: "Top Up", ru: "Пополнить", uk: "Поповнити", de: "Aufladen", es: "Recargar", tr: "Yükle" },
+  history: { en: "History", ru: "История", uk: "Історія", de: "Verlauf", es: "Historial", tr: "Geçmiş" },
+  details: { en: "Details", ru: "Детали", uk: "Деталі", de: "Details", es: "Detalles", tr: "Detaylar" },
+  recentActivity: { en: "Recent Activity", ru: "Последние операции", uk: "Останні операції", de: "Letzte Aktivität", es: "Actividad reciente", tr: "Son işlemler" },
+  viewAll: { en: "View All", ru: "Все", uk: "Усі", de: "Alle", es: "Ver todo", tr: "Tümü" },
+  topUpStable: { en: "Top Up with Stablecoins", ru: "Пополнить стейблкоинами", uk: "Поповнити стейблкоїнами", de: "Mit Stablecoins aufladen", es: "Recargar con stablecoins", tr: "Stablecoin ile yükle" },
+  usdtInstant: { en: "USDT / USDC - instant", ru: "USDT / USDC - мгновенно", uk: "USDT / USDC - миттєво", de: "USDT / USDC - sofort", es: "USDT / USDC - instantáneo", tr: "USDT / USDC - anında" },
+  useful: { en: "Live Prices", ru: "Актуальные цены", uk: "Актуальні ціни", de: "Live-Kurse", es: "Precios en vivo", tr: "Canlı fiyatlar" },
+  support: { en: "Support", ru: "Поддержка", uk: "Підтримка", de: "Support", es: "Soporte", tr: "Destek" },
+  faq: { en: "FAQ", ru: "FAQ", uk: "FAQ", de: "FAQ", es: "FAQ", tr: "SSS" },
+  // Card
+  myCard: { en: "My Card", ru: "Моя карта", uk: "Моя картка", de: "Meine Karte", es: "Mi tarjeta", tr: "Kartım" },
+  allCards: { en: "All Cards", ru: "Все карты", uk: "Усі картки", de: "Alle Karten", es: "Todas las tarjetas", tr: "Tüm kartlar" },
+  allCardsBtn: { en: "all cards", ru: "все карты", uk: "усі картки", de: "alle Karten", es: "todas", tr: "tüm kartlar" },
+  cardLimits: { en: "Card Limits", ru: "Лимиты карты", uk: "Ліміти картки", de: "Kartenlimits", es: "Límites", tr: "Kart limitleri" },
+  daily: { en: "Daily", ru: "Дневной", uk: "Денний", de: "Täglich", es: "Diario", tr: "Günlük" },
+  monthly: { en: "Monthly", ru: "Месячный", uk: "Місячний", de: "Monatlich", es: "Mensual", tr: "Aylık" },
+  topupFee: { en: "Top-up Fee", ru: "Комиссия", uk: "Комісія", de: "Aufladegebühr", es: "Comisión", tr: "Yükleme ücreti" },
+  lockCard: { en: "Lock Card", ru: "Заблокировать", uk: "Заблокувати", de: "Karte sperren", es: "Bloquear", tr: "Kartı kilitle" },
+  cardLocked: { en: "Card Locked", ru: "Карта заблокирована", uk: "Картка заблокована", de: "Karte gesperrt", es: "Tarjeta bloqueada", tr: "Kart kilitli" },
+  lockQuestion: { en: "Lock this card?", ru: "Заблокировать эту карту?", uk: "Заблокувати цю картку?", de: "Karte sperren?", es: "¿Bloquear tarjeta?", tr: "Kartı kilitle?" },
+  lockDesc: { en: "Card will be frozen. No transactions will go through.", ru: "Карта будет заморожена. Транзакции не будут проходить.", uk: "Картку буде заморожено. Транзакції не проходитимуть.", de: "Karte wird eingefroren.", es: "La tarjeta será congelada.", tr: "Kart dondurulacak." },
+  yesLock: { en: "Yes, Lock", ru: "Да, заблокировать", uk: "Так, заблокувати", de: "Ja, sperren", es: "Sí, bloquear", tr: "Evet, kilitle" },
+  no: { en: "No", ru: "Нет", uk: "Ні", de: "Nein", es: "No", tr: "Hayır" },
+  setPinCode: { en: "Set Pin Code", ru: "Установить PIN", uk: "Встановити PIN", de: "PIN festlegen", es: "Establecer PIN", tr: "PIN belirle" },
+  replaceCard: { en: "Replace Card", ru: "Заменить карту", uk: "Замінити картку", de: "Karte ersetzen", es: "Reemplazar tarjeta", tr: "Kartı değiştir" },
+  applePay: { en: "How to Add Card to Apple Pay", ru: "Как добавить карту в Apple Pay", uk: "Як додати картку в Apple Pay", de: "Karte zu Apple Pay hinzufügen", es: "Añadir a Apple Pay", tr: "Apple Pay'e ekle" },
+  tapMain: { en: "Tap a card to set as main", ru: "Нажмите, чтобы сделать основной", uk: "Натисніть, щоб зробити основною", de: "Tippen um Hauptkarte zu setzen", es: "Toca para establecer como principal", tr: "Ana kart yapmak için dokun" },
+  main: { en: "Main", ru: "Основная", uk: "Основна", de: "Haupt", es: "Principal", tr: "Ana" },
+  orderNew: { en: "Order New Card", ru: "Заказать новую карту", uk: "Замовити нову картку", de: "Neue Karte bestellen", es: "Pedir nueva tarjeta", tr: "Yeni kart sipariş et" },
+  tapFlip: { en: "Tap to flip", ru: "Нажмите для поворота", uk: "Натисніть для повороту", de: "Tippen zum Umdrehen", es: "Toca para girar", tr: "Çevirmek için dokun" },
+  flip: { en: "← Flip", ru: "← Назад", uk: "← Назад", de: "← Zurück", es: "← Girar", tr: "← Çevir" },
+  cardNumber: { en: "Card Number", ru: "Номер карты", uk: "Номер картки", de: "Kartennummer", es: "Número de tarjeta", tr: "Kart numarası" },
+  expiry: { en: "Expiry", ru: "Срок", uk: "Термін", de: "Ablauf", es: "Vencimiento", tr: "Son kullanma" },
+  // History
+  txHistory: { en: "Transaction History", ru: "История транзакций", uk: "Історія транзакцій", de: "Transaktionsverlauf", es: "Historial de transacciones", tr: "İşlem geçmişi" },
+  april2026: { en: "April 2026", ru: "Апрель 2026", uk: "Квітень 2026", de: "April 2026", es: "Abril 2026", tr: "Nisan 2026" },
+  // Tx Detail
+  status: { en: "Status", ru: "Статус", uk: "Статус", de: "Status", es: "Estado", tr: "Durum" },
+  settled: { en: "Settled", ru: "Выполнено", uk: "Виконано", de: "Abgerechnet", es: "Liquidado", tr: "Tamamlandı" },
+  declined: { en: "Declined", ru: "Отклонено", uk: "Відхилено", de: "Abgelehnt", es: "Rechazado", tr: "Reddedildi" },
+  reason: { en: "Reason", ru: "Причина", uk: "Причина", de: "Grund", es: "Razón", tr: "Neden" },
+  fromAddr: { en: "From address", ru: "Адрес отправителя", uk: "Адреса відправника", de: "Von Adresse", es: "Dirección de origen", tr: "Gönderen adres" },
+  tokenNet: { en: "Token & network", ru: "Токен и сеть", uk: "Токен і мережа", de: "Token & Netzwerk", es: "Token y red", tr: "Token ve ağ" },
+  card: { en: "Card", ru: "Карта", uk: "Картка", de: "Karte", es: "Tarjeta", tr: "Kart" },
+  merchantCharge: { en: "Merchant's charge", ru: "Сумма продавца", uk: "Сума продавця", de: "Händlergebühr", es: "Cargo del comerciante", tr: "Satıcı ücreti" },
+  exchangeRate: { en: "Exchange rate", ru: "Курс обмена", uk: "Курс обміну", de: "Wechselkurs", es: "Tipo de cambio", tr: "Döviz kuru" },
+  exchangedAmt: { en: "Exchanged amount", ru: "Сумма обмена", uk: "Сума обміну", de: "Umgerechneter Betrag", es: "Monto convertido", tr: "Dönüştürülen tutar" },
+  totalCharge: { en: "Total charge", ru: "Итого", uk: "Разом", de: "Gesamtbetrag", es: "Cargo total", tr: "Toplam ücret" },
+  amount: { en: "Amount", ru: "Сумма", uk: "Сума", de: "Betrag", es: "Monto", tr: "Tutar" },
+  cryptoTopUp: { en: "Crypto Top Up", ru: "Крипто-пополнение", uk: "Крипто-поповнення", de: "Krypto-Aufladung", es: "Recarga crypto", tr: "Kripto yükleme" },
+  paymentTo: { en: "Payment to", ru: "Оплата", uk: "Оплата", de: "Zahlung an", es: "Pago a", tr: "Ödeme:" },
+  cryptoDetails: { en: "Crypto transaction details", ru: "Детали крипто-транзакции", uk: "Деталі крипто-транзакції", de: "Krypto-Transaktionsdetails", es: "Detalles de transacción crypto", tr: "Kripto işlem detayları" },
+  termsFees: { en: "Terms and fees", ru: "Условия и комиссии", uk: "Умови та комісії", de: "Bedingungen und Gebühren", es: "Términos y comisiones", tr: "Şartlar ve ücretler" },
+  contactSupport: { en: "Contact support", ru: "Связаться с поддержкой", uk: "Зв'язатися з підтримкою", de: "Support kontaktieren", es: "Contactar soporte", tr: "Destek ile iletişim" },
+  // Top Up Sheet
+  yourAddress: { en: "Your Address", ru: "Ваш адрес", uk: "Ваша адреса", de: "Ihre Adresse", es: "Tu dirección", tr: "Adresiniz" },
+  receiveToken: { en: "Receive token", ru: "Получаемый токен", uk: "Отримуваний токен", de: "Token empfangen", es: "Token a recibir", tr: "Alınacak token" },
+  network: { en: "Network", ru: "Сеть", uk: "Мережа", de: "Netzwerk", es: "Red", tr: "Ağ" },
+  networkFee: { en: "Network fee", ru: "Комиссия сети", uk: "Комісія мережі", de: "Netzwerkgebühr", es: "Comisión de red", tr: "Ağ ücreti" },
+  topupFeeLabel: { en: "Top-up fee", ru: "Комиссия пополнения", uk: "Комісія поповнення", de: "Aufladegebühr", es: "Comisión de recarga", tr: "Yükleme ücreti" },
+  minAmount: { en: "Minimum amount", ru: "Минимальная сумма", uk: "Мінімальна сума", de: "Mindestbetrag", es: "Monto mínimo", tr: "Minimum tutar" },
+  warning: { en: "Use this address only for", ru: "Используйте этот адрес только для", uk: "Використовуйте цю адресу лише для", de: "Nutzen Sie diese Adresse nur für", es: "Use esta dirección solo para", tr: "Bu adresi yalnızca şunun için kullanın:" },
+  warningEnd: { en: "deposits on", ru: "депозитов в сети", uk: "депозитів у мережі", de: "Einzahlungen auf", es: "depósitos en", tr: "yatırımları ağında" },
+  warningLoss: { en: "Sending other tokens or using wrong network may result in loss of funds.", ru: "Отправка других токенов или использование неправильной сети может привести к потере средств.", uk: "Відправка інших токенів або використання неправильної мережі може призвести до втрати коштів.", de: "Andere Token oder falsches Netzwerk kann zu Verlust führen.", es: "Enviar otros tokens o usar la red incorrecta puede resultar en pérdida de fondos.", tr: "Başka token göndermek veya yanlış ağ kullanmak fon kaybına neden olabilir." },
+  copy: { en: "Copy", ru: "Копировать", uk: "Копіювати", de: "Kopieren", es: "Copiar", tr: "Kopyala" },
+  share: { en: "Share", ru: "Поделиться", uk: "Поділитися", de: "Teilen", es: "Compartir", tr: "Paylaş" },
+  selectNet: { en: "Select Network", ru: "Выберите сеть", uk: "Оберіть мережу", de: "Netzwerk wählen", es: "Seleccionar red", tr: "Ağ seçin" },
+  free: { en: "Free", ru: "Бесплатно", uk: "Безкоштовно", de: "Kostenlos", es: "Gratis", tr: "Ücretsiz" },
+  // Settings
+  security: { en: "Security", ru: "Безопасность", uk: "Безпека", de: "Sicherheit", es: "Seguridad", tr: "Güvenlik" },
+  twoFA: { en: "2FA Settings", ru: "Настройки 2FA", uk: "Налаштування 2FA", de: "2FA-Einstellungen", es: "Configuración 2FA", tr: "2FA Ayarları" },
+  authenticator: { en: "Authenticator", ru: "Аутентификатор", uk: "Аутентифікатор", de: "Authenticator", es: "Autenticador", tr: "Doğrulayıcı" },
+  kycStatus: { en: "KYC Status", ru: "Статус KYC", uk: "Статус KYC", de: "KYC-Status", es: "Estado KYC", tr: "KYC Durumu" },
+  verified: { en: "Verified", ru: "Подтверждён", uk: "Підтверджено", de: "Verifiziert", es: "Verificado", tr: "Doğrulandı" },
+  language: { en: "Language", ru: "Язык", uk: "Мова", de: "Sprache", es: "Idioma", tr: "Dil" },
+  comingSoon: { en: "Coming Soon", ru: "Скоро", uk: "Незабаром", de: "Demnächst", es: "Próximamente", tr: "Yakında" },
+  soon: { en: "Soon", ru: "Скоро", uk: "Скоро", de: "Bald", es: "Pronto", tr: "Yakında" },
+  physicalCard: { en: "Physical Card", ru: "Физическая карта", uk: "Фізична картка", de: "Physische Karte", es: "Tarjeta física", tr: "Fiziksel kart" },
+  worldwide: { en: "Worldwide", ru: "По всему миру", uk: "По всьому світу", de: "Weltweit", es: "Mundial", tr: "Dünya çapında" },
+  cryptoWallet: { en: "Crypto Wallet SpendX", ru: "Крипто-кошелёк SpendX", uk: "Крипто-гаманець SpendX", de: "Krypto-Wallet SpendX", es: "Monedero crypto SpendX", tr: "Kripto cüzdan SpendX" },
+  nonCustodial: { en: "Non-custodial", ru: "Некастодиальный", uk: "Некастодіальний", de: "Non-custodial", es: "Sin custodia", tr: "Saklama dışı" },
+  metamaskConnect: { en: "MetaMask", ru: "MetaMask", uk: "MetaMask", de: "MetaMask", es: "MetaMask", tr: "MetaMask" },
+  metamaskDesc: { en: "Connect wallet", ru: "Подключение кошелька", uk: "Підключення гаманця", de: "Wallet verbinden", es: "Conectar billetera", tr: "Cüzdan bağla" },
+  yield: { en: "Yield", ru: "Доходность", uk: "Дохідність", de: "Rendite", es: "Rendimiento", tr: "Getiri" },
+  yieldDesc: { en: "1-3%/month", ru: "1-3%/мес", uk: "1-3%/міс", de: "1-3%/Monat", es: "1-3%/mes", tr: "1-3%/ay" },
+  bankAccount: { en: "Bank account", ru: "Банковский счёт", uk: "Банківський рахунок", de: "Bankkonto", es: "Cuenta bancaria", tr: "Banka hesabı" },
+  preOrder: { en: "Pre-order", ru: "Предзаказ", uk: "Передзамовлення", de: "Vorbestellung", es: "Pre-orden", tr: "Ön sipariş" },
+  visaDebit: { en: "Visa Debit - Worldwide", ru: "Visa Debit - весь мир", uk: "Visa Debit - весь світ", de: "Visa Debit - Weltweit", es: "Visa Debit - Mundial", tr: "Visa Debit - Dünya" },
+  first500: { en: "First 500 cards", ru: "Первые 500 карт", uk: "Перші 500 карток", de: "Erste 500 Karten", es: "Primeras 500 tarjetas", tr: "İlk 500 kart" },
+  spotsLeft: { en: "spots left", ru: "мест осталось", uk: "місць залишилось", de: "Plätze frei", es: "lugares disponibles", tr: "yer kaldı" },
+  earlyBird: { en: "Early-bird price", ru: "Цена раннего доступа", uk: "Ціна раннього доступу", de: "Frühbucherpreis", es: "Precio anticipado", tr: "Erken kayıt fiyatı" },
+  voucherInfo: { en: "Supreme & Business cardholders get a 50% voucher for physical card pre-order", ru: "Держатели Supreme и Business получают ваучер на 50% скидку на предзаказ пластиковой карты", uk: "Власники Supreme та Business отримують ваучер на 50% знижку на передзамовлення пластикової картки", de: "Supreme & Business Karteninhaber erhalten 50% Gutschein für physische Karte", es: "Titulares Supreme y Business reciben 50% de descuento en tarjeta física", tr: "Supreme ve Business kart sahipleri fiziksel kart için %50 kupon alır" },
+  firstWave: { en: "First Wave - Waitlist", ru: "Первая волна - лист ожидания", uk: "Перша хвиля - лист очікування", de: "Erste Welle - Warteliste", es: "Primera ola - Lista de espera", tr: "İlk dalga - Bekleme listesi" },
+  left: { en: "left", ru: "осталось", uk: "залишилось", de: "übrig", es: "restantes", tr: "kaldı" },
+  reserved: { en: "reserved", ru: "забронировано", uk: "заброньовано", de: "reserviert", es: "reservados", tr: "rezerve" },
+  contactless: { en: "Contactless Visa Debit Card", ru: "Бесконтактная карта Visa Debit", uk: "Безконтактна картка Visa Debit", de: "Kontaktlose Visa Debitkarte", es: "Tarjeta Visa Debit sin contacto", tr: "Temassız Visa Banka Kartı" },
+  worldAccept: { en: "Worldwide acceptance", ru: "Принимается по всему миру", uk: "Приймається по всьому світу", de: "Weltweit akzeptiert", es: "Aceptada mundialmente", tr: "Dünya çapında kabul" },
+  nfcEnabled: { en: "NFC enabled", ru: "Поддержка NFC", uk: "Підтримка NFC", de: "NFC-fähig", es: "NFC habilitado", tr: "NFC etkin" },
+  freeDelivery: { en: "Free worldwide delivery", ru: "Бесплатная доставка по миру", uk: "Безкоштовна доставка по світу", de: "Kostenloser Versand weltweit", es: "Envío gratuito mundial", tr: "Ücretsiz dünya çapında teslimat" },
+  trackedShip: { en: "Tracked shipping", ru: "Отслеживаемая доставка", uk: "Відстежувана доставка", de: "Sendungsverfolgung", es: "Envío con seguimiento", tr: "Takipli kargo" },
+  preOrderPrice: { en: "Pre-order price", ru: "Цена предзаказа", uk: "Ціна передзамовлення", de: "Vorbestellungspreis", es: "Precio de pre-orden", tr: "Ön sipariş fiyatı" },
+  preOrderDesc: { en: "Pre-order now and lock in the early-bird price. You will be charged when the card ships. Full refund available until shipping.", ru: "Закажите сейчас и зафиксируйте цену раннего доступа. Оплата при отправке. Полный возврат до момента отправки.", uk: "Замовте зараз і зафіксуйте ціну раннього доступу. Оплата при відправці. Повне повернення до відправки.", de: "Jetzt vorbestellen. Zahlung bei Versand. Vollständige Rückerstattung möglich.", es: "Ordena ahora al precio anticipado. Se cobra al enviar. Reembolso completo hasta el envío.", tr: "Şimdi sipariş verin. Kart gönderildiğinde ücretlendirilirsiniz." },
+  preOrderNow: { en: "Pre-order Now", ru: "Предзаказать", uk: "Передзамовити", de: "Jetzt vorbestellen", es: "Pre-ordenar ahora", tr: "Şimdi sipariş ver" },
+  onTheList: { en: "You're on the list!", ru: "Вы в списке!", uk: "Ви у списку!", de: "Sie sind auf der Liste!", es: "¡Estás en la lista!", tr: "Listedesiniz!" },
+  position: { en: "Position", ru: "Позиция", uk: "Позиція", de: "Position", es: "Posición", tr: "Pozisyon" },
+  notifyReady: { en: "We'll notify you as soon as cards are ready to ship.", ru: "Мы уведомим вас, как только карты будут готовы к отправке.", uk: "Ми повідомимо вас, коли картки будуть готові до відправки.", de: "Wir benachrichtigen Sie, sobald die Karten versandbereit sind.", es: "Le notificaremos cuando las tarjetas estén listas.", tr: "Kartlar gönderime hazır olduğunda sizi bilgilendireceğiz." },
+  platformFee: { en: "Your exchange or wallet may charge an additional withdrawal fee on their side. Please check before sending.", ru: "Ваша биржа или кошелёк может взимать дополнительную комиссию за вывод. Пожалуйста, проверьте перед отправкой.", uk: "Ваша біржа або гаманець може стягувати додаткову комісію за виведення. Будь ласка, перевірте перед відправкою.", de: "Ihre Börse oder Wallet kann eine zusätzliche Auszahlungsgebühr erheben. Bitte prüfen Sie vor dem Senden.", es: "Su exchange o wallet puede cobrar una comisión adicional por retiro. Verifique antes de enviar.", tr: "Borsanız veya cüzdanınız ek bir çekim ücreti alabilir. Göndermeden önce kontrol edin." },
+  iWantReceive: { en: "I want to receive on card", ru: "Хочу получить на карту", uk: "Хочу отримати на картку", de: "Ich möchte auf die Karte erhalten", es: "Quiero recibir en la tarjeta", tr: "Karta almak istiyorum" },
+  notified: { en: "Notified", ru: "Уведомлю", uk: "Повідомлю", de: "Benachrichtigt", es: "Notificado", tr: "Bildirildi" },
+  notifyQuestion: { en: "Get notified when this feature launches?", ru: "Уведомить вас, когда эта функция появится?", uk: "Повідомити вас, коли ця функція з'явиться?", de: "Benachrichtigt werden, wenn diese Funktion verfügbar ist?", es: "¿Recibir notificación cuando esta función esté disponible?", tr: "Bu özellik çıktığında bildirim almak ister misiniz?" },
+  yes: { en: "Yes, notify me", ru: "Да, уведомить", uk: "Так, повідомити", de: "Ja, benachrichtigen", es: "Sí, notifícame", tr: "Evet, bildir" },
+  demoPrices: { en: "Demo prices · updates when deployed", ru: "Демо-цены · обновятся после деплоя", uk: "Демо-ціни · оновляться після деплою", de: "Demo-Preise · aktualisiert nach Deployment", es: "Precios demo · se actualizan al implementar", tr: "Demo fiyatlar · dağıtımda güncellenir" },
+  live: { en: "Live", ru: "Live", uk: "Live", de: "Live", es: "En vivo", tr: "Canlı" },
+  active: { en: "Active", ru: "Активна", uk: "Активна", de: "Aktiv", es: "Activa", tr: "Aktif" },
+  cardTopUp: { en: "Card Top Up", ru: "Пополнение карты", uk: "Поповнення картки", de: "Kartenaufladung", es: "Recarga de tarjeta", tr: "Kart yükleme" },
+  // Missing translations
+  noCards: { en: "No cards yet", ru: "Карт пока нет", uk: "Карток ще немає", de: "Noch keine Karten", es: "Sin tarjetas aún", tr: "Henüz kart yok" },
+  noCardsDesc: { en: "Order your first SpendX card and start spending crypto everywhere", ru: "Закажите свою первую карту SpendX и тратьте крипту везде", uk: "Замовте першу картку SpendX та витрачайте крипту скрізь", de: "Bestellen Sie Ihre erste SpendX-Karte", es: "Ordena tu primera tarjeta SpendX", tr: "İlk SpendX kartınızı sipariş edin" },
+  orderFirst: { en: "Order Your First Card", ru: "Заказать первую карту", uk: "Замовити першу картку", de: "Erste Karte bestellen", es: "Pedir primera tarjeta", tr: "İlk kartınızı sipariş edin" },
+  chooseCard: { en: "Choose Your Card", ru: "Выберите карту", uk: "Оберіть картку", de: "Karte wählen", es: "Elige tu tarjeta", tr: "Kartınızı seçin" },
+  kycRequired: { en: "KYC Required", ru: "Требуется KYC", uk: "Потрібна KYC", de: "KYC erforderlich", es: "KYC requerido", tr: "KYC gerekli" },
+  kycRequiredDesc: { en: "Complete verification to order cards", ru: "Пройдите верификацию для заказа карт", uk: "Пройдіть верифікацію для замовлення карток", de: "Verifizierung abschließen", es: "Completa la verificación para ordenar", tr: "Kart sipariş etmek için doğrulamayı tamamlayın" },
+  completeKyc: { en: "Complete KYC to Order", ru: "Пройти KYC для заказа", uk: "Пройти KYC для замовлення", de: "KYC abschließen", es: "Completar KYC", tr: "Sipariş için KYC'yi tamamlayın" },
+  dailyLimit: { en: "Daily Limit", ru: "Дневной лимит", uk: "Денний ліміт", de: "Tageslimit", es: "Límite diario", tr: "Günlük limit" },
+  monthlyLimit: { en: "Monthly Limit", ru: "Месячный лимит", uk: "Місячний ліміт", de: "Monatslimit", es: "Límite mensual", tr: "Aylık limit" },
+  topupFeeShop: { en: "Top-up Fee", ru: "Комиссия пополнения", uk: "Комісія поповнення", de: "Aufladegebühr", es: "Comisión de recarga", tr: "Yükleme ücreti" },
+  issuanceFee: { en: "incl. issuance fee", ru: "включая комиссию за выпуск", uk: "включаючи комісію за випуск", de: "Ausgabegebühr", es: "tarifa de emisión", tr: "düzenleme ücreti" },
+  noCardsYet: { en: "No Cards Yet", ru: "Карт пока нет", uk: "Карток ще немає", de: "Noch keine Karten", es: "Sin tarjetas", tr: "Henüz kart yok" },
+  noCardsDesc2: { en: "Choose from 4 card tiers with different limits and fees to match your needs", ru: "Выберите из 4 уровней карт с разными лимитами и комиссиями", uk: "Оберіть з 4 рівнів карток з різними лімітами та комісіями", de: "Wählen Sie aus 4 Kartenstufen", es: "Elige entre 4 niveles de tarjeta", tr: "İhtiyaçlarınıza uygun 4 kart seviyesinden birini seçin" },
+  browsePlans: { en: "Browse Card Plans", ru: "Посмотреть тарифы", uk: "Переглянути тарифи", de: "Tarife ansehen", es: "Ver planes", tr: "Plan seçeneklerini gör" },
+  changeSkin: { en: "Change Card Skin", ru: "Сменить дизайн карты", uk: "Змінити дизайн картки", de: "Kartendesign ändern", es: "Cambiar diseño", tr: "Kart tasarımını değiştir" },
+  uploadGallery: { en: "Upload from Gallery", ru: "Загрузить из галереи", uk: "Завантажити з галереї", de: "Aus Galerie laden", es: "Subir de galería", tr: "Galeriden yükle" },
+  currentSkin: { en: "Current", ru: "Текущий", uk: "Поточний", de: "Aktuell", es: "Actual", tr: "Mevcut" },
+  defaultSkin: { en: "default", ru: "стандартный", uk: "стандартний", de: "Standard", es: "predeterminado", tr: "varsayılan" },
+  customImg: { en: "custom image", ru: "своё изображение", uk: "своє зображення", de: "eigenes Bild", es: "imagen personalizada", tr: "özel resim" },
+  resetDefault: { en: "Reset to Default", ru: "Вернуть стандартный", uk: "Повернути стандартний", de: "Zurücksetzen", es: "Restablecer", tr: "Varsayılana dön" },
+  uploadOwn: { en: "Upload your own image", ru: "Загрузите своё изображение", uk: "Завантажте своє зображення", de: "Eigenes Bild hochladen", es: "Sube tu propia imagen", tr: "Kendi resminizi yükleyin" },
+  recSpecs: { en: "Recommended specs", ru: "Рекомендации", uk: "Рекомендації", de: "Empfehlungen", es: "Especificaciones", tr: "Önerilen özellikler" },
+  spent: { en: "spent", ru: "потрачено", uk: "витрачено", de: "ausgegeben", es: "gastado", tr: "harcanan" },
+  orderNewCard: { en: "+ Order New Card", ru: "+ Заказать карту", uk: "+ Замовити картку", de: "+ Neue Karte", es: "+ Pedir tarjeta", tr: "+ Yeni kart" },
+  payAppleGoogle: { en: "Apple Pay & Google Pay", ru: "Apple Pay и Google Pay", uk: "Apple Pay та Google Pay", de: "Apple Pay & Google Pay", es: "Apple Pay y Google Pay", tr: "Apple Pay ve Google Pay" },
+  googlePayOnly: { en: "Google Pay only", ru: "Только Google Pay", uk: "Лише Google Pay", de: "Nur Google Pay", es: "Solo Google Pay", tr: "Yalnızca Google Pay" },
+  skinUpdated: { en: "skin updated!", ru: "дизайн обновлён!", uk: "дизайн оновлено!", de: "Design aktualisiert!", es: "diseño actualizado!", tr: "tasarım güncellendi!" },
+  skinReset: { en: "default skin restored", ru: "стандартный дизайн восстановлен", uk: "стандартний дизайн відновлено", de: "Standarddesign wiederhergestellt", es: "diseño predeterminado restaurado", tr: "varsayılan tasarım geri yüklendi" },
+  // KYC
+  kycVerification: { en: "KYC Verification", ru: "Верификация KYC", uk: "Верифікація KYC", de: "KYC-Verifizierung", es: "Verificación KYC", tr: "KYC Doğrulaması" },
+  notStarted: { en: "Not Started", ru: "Не начата", uk: "Не розпочато", de: "Nicht gestartet", es: "No iniciado", tr: "Başlanmadı" },
+  inReview: { en: "In Review", ru: "На проверке", uk: "На перевірці", de: "In Prüfung", es: "En revisión", tr: "İnceleniyor" },
+  kycDescNotStarted: { en: "Complete identity verification to order cards and unlock all features.", ru: "Пройдите верификацию для заказа карт и доступа ко всем функциям.", uk: "Пройдіть верифікацію для замовлення карток та доступу до всіх функцій.", de: "Identitätsprüfung abschließen, um Karten zu bestellen.", es: "Complete la verificación para ordenar tarjetas.", tr: "Kart sipariş etmek için kimlik doğrulamasını tamamlayın." },
+  kycDescPending: { en: "Your documents are being reviewed. This usually takes 5-15 minutes.", ru: "Ваши документы на проверке. Обычно это занимает 5-15 минут.", uk: "Ваші документи на перевірці. Зазвичай це займає 5-15 хвилин.", de: "Ihre Dokumente werden geprüft. Dauert 5-15 Minuten.", es: "Sus documentos están siendo revisados. Toma 5-15 minutos.", tr: "Belgeleriniz inceleniyor. Genellikle 5-15 dakika sürer." },
+  kycDescVerified: { en: "Your identity is verified. You have full access to all SpendX features.", ru: "Ваша личность подтверждена. У вас полный доступ ко всем функциям SpendX.", uk: "Вашу особу підтверджено. Ви маєте повний доступ до всіх функцій SpendX.", de: "Ihre Identität ist verifiziert. Voller Zugang.", es: "Su identidad está verificada. Acceso completo.", tr: "Kimliğiniz doğrulandı. Tam erişim." },
+  accountCreated: { en: "Account Created", ru: "Аккаунт создан", uk: "Акаунт створено", de: "Konto erstellt", es: "Cuenta creada", tr: "Hesap oluşturuldu" },
+  personalInfo: { en: "Personal Information", ru: "Личная информация", uk: "Особиста інформація", de: "Persönliche Daten", es: "Información personal", tr: "Kişisel bilgiler" },
+  docUpload: { en: "Document Upload", ru: "Загрузка документов", uk: "Завантаження документів", de: "Dokumenten-Upload", es: "Subir documentos", tr: "Belge yükleme" },
+  idVerification: { en: "Identity Verification", ru: "Проверка личности", uk: "Перевірка особи", de: "Identitätsprüfung", es: "Verificación de identidad", tr: "Kimlik doğrulama" },
+  whatYouNeed: { en: "WHAT YOU'LL NEED", ru: "ЧТО ВАМ НУЖНО", uk: "ЩО ВАМ ПОТРІБНО", de: "WAS SIE BRAUCHEN", es: "LO QUE NECESITARÁ", tr: "GEREKLİ BELGELER" },
+  validPassport: { en: "Valid passport or national ID", ru: "Действующий паспорт или удостоверение", uk: "Дійсний паспорт або посвідчення", de: "Gültiger Reisepass oder Ausweis", es: "Pasaporte o DNI válido", tr: "Geçerli pasaport veya kimlik" },
+  selfieCheck: { en: "Selfie for liveness check", ru: "Селфи для проверки", uk: "Селфі для перевірки", de: "Selfie zur Prüfung", es: "Selfie de verificación", tr: "Canlılık kontrolü için selfie" },
+  proofAddress: { en: "Proof of address (utility bill, bank statement)", ru: "Подтверждение адреса (счёт за услуги, выписка)", uk: "Підтвердження адреси (рахунок за послуги, виписка)", de: "Adressnachweis (Rechnung, Kontoauszug)", es: "Comprobante de domicilio", tr: "Adres kanıtı (fatura, hesap özeti)" },
+  startVerification: { en: "Start Verification", ru: "Начать верификацию", uk: "Почати верифікацію", de: "Verifizierung starten", es: "Iniciar verificación", tr: "Doğrulamayı başlat" },
+  takes5min: { en: "Takes ~5 minutes - Powered by Sumsub", ru: "Занимает ~5 минут - Sumsub", uk: "Займає ~5 хвилин - Sumsub", de: "Dauert ~5 Minuten - Sumsub", es: "Toma ~5 minutos - Sumsub", tr: "~5 dakika sürer - Sumsub" },
+  reviewingDocs: { en: "Reviewing your documents...", ru: "Проверяем ваши документы...", uk: "Перевіряємо ваші документи...", de: "Dokumente werden geprüft...", es: "Revisando documentos...", tr: "Belgeleriniz inceleniyor..." },
+  usually5to15: { en: "Usually takes 5-15 minutes", ru: "Обычно 5-15 минут", uk: "Зазвичай 5-15 хвилин", de: "Dauert 5-15 Minuten", es: "Toma 5-15 minutos", tr: "Genellikle 5-15 dakika" },
+  simulateApproval: { en: "Simulate Approval (demo)", ru: "Симулировать одобрение (демо)", uk: "Симулювати схвалення (демо)", de: "Genehmigung simulieren (Demo)", es: "Simular aprobación (demo)", tr: "Onay simüle et (demo)" },
+  fullAccess: { en: "Full access unlocked. You can order any card tier.", ru: "Полный доступ открыт. Можете заказать любую карту.", uk: "Повний доступ відкрито. Можете замовити будь-яку картку.", de: "Voller Zugang freigeschaltet.", es: "Acceso completo desbloqueado.", tr: "Tam erişim açıldı. Herhangi bir kart sipariş edebilirsiniz." },
+  orderSpendx: { en: "Order Your SpendX Card", ru: "Заказать карту SpendX", uk: "Замовити картку SpendX", de: "SpendX-Karte bestellen", es: "Pedir tarjeta SpendX", tr: "SpendX kartınızı sipariş edin" },
+  kycSubmitted: { en: "KYC submitted", ru: "KYC отправлен", uk: "KYC надіслано", de: "KYC eingereicht", es: "KYC enviado", tr: "KYC gönderildi" },
+  kycVerified: { en: "KYC Verified!", ru: "KYC подтверждён!", uk: "KYC підтверджено!", de: "KYC verifiziert!", es: "KYC verificado!", tr: "KYC doğrulandı!" },
+  // Payment
+  orderCard: { en: "Order", ru: "Заказать", uk: "Замовити", de: "Bestellen", es: "Pedir", tr: "Sipariş" },
+  issuanceFeeLabel: { en: "Card issuance fee", ru: "Комиссия за выпуск карты", uk: "Комісія за випуск картки", de: "Kartenausgabegebühr", es: "Tarifa de emisión", tr: "Kart düzenleme ücreti" },
+  off15: { en: "-25% first card", ru: "-25% первая карта", uk: "-25% перша картка", de: "-25% erste Karte", es: "-25% primera tarjeta", tr: "-25% ilk kart" },
+  firstCardLine1: { en: "-25% on your first card.", ru: "-25% на вашу первую карту.", uk: "-25% на вашу першу картку.", de: "-25% auf Ihre erste Karte.", es: "-25% en tu primera tarjeta.", tr: "İlk kartınızda -%25." },
+  firstCardLine2: { en: "Choose the best option.", ru: "Выбирайте лучший вариант.", uk: "Обирайте найкращий варіант.", de: "Wählen Sie die beste Option.", es: "Elige la mejor opción.", tr: "En iyi seçeneği seçin." },
+  firstCardGift: { en: "FIRST CARD GIFT", ru: "ПОДАРОК", uk: "ПОДАРУНОК", de: "GESCHENK", es: "REGALO", tr: "HEDİYE" },
+  bestValue: { en: "BEST VALUE", ru: "ЛУЧШИЙ ВЫБОР", uk: "НАЙКРАЩИЙ ВИБІР", de: "BESTE WAHL", es: "MEJOR OPCIÓN", tr: "EN İYİ SEÇİM" },
+  businessApproval: { en: "Requires support approval", ru: "Требует одобрения поддержки", uk: "Потребує схвалення підтримки", de: "Erfordert Support-Genehmigung", es: "Requiere aprobación del soporte", tr: "Destek onayı gerektirir" },
+  includesVoucher: { en: "Includes 50% voucher for physical card", ru: "Включает ваучер 50% на пластиковую карту", uk: "Включає ваучер 50% на пластикову картку", de: "Inkl. 50% Gutschein für physische Karte", es: "Incluye 50% cupón para tarjeta física", tr: "Fiziksel kart için %50 kupon dahil" },
+  validity: { en: "Validity", ru: "Срок действия", uk: "Термін дії", de: "Gültigkeit", es: "Validez", tr: "Geçerlilik" },
+  years2: { en: "2 years", ru: "2 года", uk: "2 роки", de: "2 Jahre", es: "2 años", tr: "2 yıl" },
+  years3: { en: "3 years", ru: "3 года", uk: "3 роки", de: "3 Jahre", es: "3 años", tr: "3 yıl" },
+  sentPayment: { en: "I've Sent the Payment", ru: "Я отправил оплату", uk: "Я надіслав оплату", de: "Zahlung gesendet", es: "He enviado el pago", tr: "Ödemeyi gönderdim" },
+  topUpConfirmed: { en: "Top-up confirmed!", ru: "Пополнение подтверждено!", uk: "Поповнення підтверджено!", de: "Aufladung bestätigt!", es: "Recarga confirmada!", tr: "Yükleme onaylandı!" },
+  topUpDeclined: { en: "Transaction declined", ru: "Транзакция отклонена", uk: "Транзакцію відхилено", de: "Transaktion abgelehnt", es: "Transacción rechazada", tr: "İşlem reddedildi" },
+  processing: { en: "Processing...", ru: "Обработка...", uk: "Обробка...", de: "Verarbeitung...", es: "Procesando...", tr: "İşleniyor..." },
+  sendOnly: { en: "Send only", ru: "Отправляйте только", uk: "Надсилайте лише", de: "Senden Sie nur", es: "Envíe solo", tr: "Yalnızca gönderin" },
+  onNetwork: { en: "on", ru: "в сети", uk: "в мережі", de: "auf", es: "en", tr: "ağında" },
+  wrongTokenWarn: { en: "Sending other tokens or using wrong network may result in loss of funds.", ru: "Отправка других токенов или использование неправильной сети может привести к потере средств.", uk: "Відправка інших токенів або використання неправильної мережі може призвести до втрати коштів.", de: "Andere Token oder falsches Netzwerk kann zu Verlust führen.", es: "Enviar otros tokens puede resultar en pérdida de fondos.", tr: "Başka token veya yanlış ağ fon kaybına neden olabilir." },
+  payWithCrypto: { en: "Pay with Crypto", ru: "Оплатить криптой", uk: "Оплатити криптою", de: "Mit Krypto bezahlen", es: "Pagar con crypto", tr: "Kripto ile öde" },
+  cancel: { en: "Cancel", ru: "Отмена", uk: "Скасувати", de: "Abbrechen", es: "Cancelar", tr: "İptal" },
+  goToMyCards: { en: "Go to My Cards", ru: "Перейти к картам", uk: "Перейти до карток", de: "Zu meinen Karten", es: "Ir a mis tarjetas", tr: "Kartlarıma git" },
+  cardOrdered: { en: "Card Ordered!", ru: "Карта заказана!", uk: "Картку замовлено!", de: "Karte bestellt!", es: "Tarjeta ordenada!", tr: "Kart sipariş edildi!" },
+  orderDesc: { en: "Your card will be activated shortly. Check My Cards to manage it.", ru: "Ваша карта скоро будет активирована. Управляйте ей в разделе Карты.", uk: "Вашу картку скоро буде активовано. Керуйте нею в розділі Картки.", de: "Ihre Karte wird in Kürze aktiviert.", es: "Su tarjeta se activará pronto.", tr: "Kartınız kısa sürede aktif olacak." },
+  amountToSend: { en: "Amount to send", ru: "Сумма к отправке", uk: "Сума до відправки", de: "Zu sendender Betrag", es: "Monto a enviar", tr: "Gönderilecek tutar" },
+  // 2FA
+  twoFASecurity: { en: "2FA Security", ru: "Безопасность 2FA", uk: "Безпека 2FA", de: "2FA-Sicherheit", es: "Seguridad 2FA", tr: "2FA Güvenliği" },
+  twoFATitle: { en: "Two-Factor Authentication", ru: "Двухфакторная аутентификация", uk: "Двофакторна автентифікація", de: "Zwei-Faktor-Authentifizierung", es: "Autenticación de dos factores", tr: "İki faktörlü kimlik doğrulama" },
+  twoFADesc: { en: "Add an extra layer of security to your account. Choose your preferred method.", ru: "Добавьте дополнительный уровень безопасности. Выберите способ.", uk: "Додайте додатковий рівень безпеки. Оберіть спосіб.", de: "Zusätzliche Sicherheitsebene hinzufügen.", es: "Agregue seguridad adicional a su cuenta.", tr: "Hesabınıza ekstra güvenlik ekleyin." },
+  smsVerification: { en: "SMS Verification", ru: "SMS-верификация", uk: "SMS-верифікація", de: "SMS-Verifizierung", es: "Verificación por SMS", tr: "SMS Doğrulama" },
+  smsDesc: { en: "Receive a code via text message", ru: "Получите код по SMS", uk: "Отримайте код через SMS", de: "Code per SMS erhalten", es: "Reciba un código por SMS", tr: "SMS ile kod alın" },
+  googleAuth: { en: "Google Authenticator", ru: "Google Authenticator", uk: "Google Authenticator", de: "Google Authenticator", es: "Google Authenticator", tr: "Google Authenticator" },
+  googleAuthDesc: { en: "Time-based one-time passwords (TOTP)", ru: "Одноразовые пароли на основе времени (TOTP)", uk: "Одноразові паролі на основі часу (TOTP)", de: "Zeitbasierte Einmalpasswörter (TOTP)", es: "Contraseñas de un solo uso (TOTP)", tr: "Zamana dayalı tek kullanımlık şifreler (TOTP)" },
+  recommended: { en: "Recommended", ru: "Рекомендуется", uk: "Рекомендовано", de: "Empfohlen", es: "Recomendado", tr: "Önerilen" },
+  enterPhone: { en: "Enter your phone number", ru: "Введите номер телефона", uk: "Введіть номер телефону", de: "Telefonnummer eingeben", es: "Ingrese su teléfono", tr: "Telefon numaranızı girin" },
+  enterCode: { en: "Enter verification code", ru: "Введите код подтверждения", uk: "Введіть код підтвердження", de: "Bestätigungscode eingeben", es: "Ingrese el código", tr: "Doğrulama kodunu girin" },
+  sendCode: { en: "Send Code", ru: "Отправить код", uk: "Надіслати код", de: "Code senden", es: "Enviar código", tr: "Kod gönder" },
+  weSentCode: { en: "We sent a 6-digit code to", ru: "Мы отправили 6-значный код на", uk: "Ми надіслали 6-значний код на", de: "Wir haben einen 6-stelligen Code gesendet an", es: "Enviamos un código de 6 dígitos a", tr: "6 haneli kodu gönderdik:" },
+  verify: { en: "Verify", ru: "Подтвердить", uk: "Підтвердити", de: "Verifizieren", es: "Verificar", tr: "Doğrula" },
+  resend: { en: "Didn't receive? Resend", ru: "Не получили? Повторить", uk: "Не отримали? Повторити", de: "Nicht erhalten? Erneut senden", es: "No recibido? Reenviar", tr: "Almadınız mı? Tekrar gönder" },
+  smsEnabled: { en: "SMS 2FA Enabled!", ru: "SMS 2FA включена!", uk: "SMS 2FA увімкнено!", de: "SMS 2FA aktiviert!", es: "SMS 2FA habilitado!", tr: "SMS 2FA etkinleştirildi!" },
+  smsEnabledDesc: { en: "You will receive an SMS code when logging in from a new device.", ru: "Вы будете получать SMS-код при входе с нового устройства.", uk: "Ви отримуватимете SMS-код при вході з нового пристрою.", de: "Sie erhalten einen SMS-Code bei Anmeldung.", es: "Recibirá un código SMS al iniciar sesión.", tr: "Yeni cihazdan giriş yaparken SMS kodu alacaksınız." },
+  done: { en: "Done", ru: "Готово", uk: "Готово", de: "Fertig", es: "Listo", tr: "Tamam" },
+  gaSetup: { en: "Setup Google Authenticator", ru: "Настройка Google Authenticator", uk: "Налаштування Google Authenticator", de: "Google Authenticator einrichten", es: "Configurar Google Authenticator", tr: "Google Authenticator kurulumu" },
+  installApp: { en: "Install the app", ru: "Установите приложение", uk: "Встановіть додаток", de: "App installieren", es: "Instalar la app", tr: "Uygulamayı yükleyin" },
+  installDesc: { en: "Download Google Authenticator or any TOTP app from App Store / Play Store", ru: "Скачайте Google Authenticator или TOTP-приложение", uk: "Завантажте Google Authenticator або TOTP-додаток", de: "Google Authenticator herunterladen", es: "Descargue Google Authenticator", tr: "Google Authenticator'ı indirin" },
+  scanQR: { en: "Scan QR code or enter key", ru: "Сканируйте QR-код или введите ключ", uk: "Скануйте QR-код або введіть ключ", de: "QR-Code scannen oder Schlüssel eingeben", es: "Escanee el QR o ingrese la clave", tr: "QR kodu tarayın veya anahtarı girin" },
+  scanDesc: { en: "Open the app, tap \"+\" and scan the QR code below", ru: "Откройте приложение, нажмите \"+\" и сканируйте QR-код", uk: "Відкрийте додаток, натисніть \"+\" і скануйте QR-код", de: "App öffnen, \"+\" tippen und QR-Code scannen", es: "Abra la app, toque \"+\" y escanee el QR", tr: "Uygulamayı açın, \"+\"ya dokunun ve QR kodu tarayın" },
+  enterVerCode: { en: "Enter verification code", ru: "Введите код подтверждения", uk: "Введіть код підтвердження", de: "Bestätigungscode eingeben", es: "Ingrese el código de verificación", tr: "Doğrulama kodunu girin" },
+  enterVerDesc: { en: "Type the 6-digit code from your authenticator app to verify", ru: "Введите 6-значный код из приложения для подтверждения", uk: "Введіть 6-значний код з додатку для підтвердження", de: "6-stelligen Code aus der App eingeben", es: "Ingrese el código de 6 dígitos de su app", tr: "Doğrulama için uygulamadaki 6 haneli kodu girin" },
+  continueSetup: { en: "Continue Setup", ru: "Продолжить", uk: "Продовжити", de: "Weiter", es: "Continuar", tr: "Devam et" },
+  orEnterManually: { en: "Or enter this key manually:", ru: "Или введите ключ вручную:", uk: "Або введіть ключ вручну:", de: "Oder Schlüssel manuell eingeben:", es: "O ingrese esta clave:", tr: "Veya bu anahtarı girin:" },
+  saveKey: { en: "Save this key in a safe place. If you lose access to your authenticator app, you will need it to recover your account.", ru: "Сохраните этот ключ в безопасном месте. Если потеряете доступ к приложению, он понадобится для восстановления.", uk: "Збережіть цей ключ у безпечному місці. Якщо втратите доступ до додатку, він знадобиться для відновлення.", de: "Bewahren Sie diesen Schlüssel sicher auf.", es: "Guarde esta clave en un lugar seguro.", tr: "Bu anahtarı güvenli bir yerde saklayın." },
+  savedKeyContinue: { en: "I've Saved the Key - Continue", ru: "Ключ сохранён - Продолжить", uk: "Ключ збережено - Продовжити", de: "Schlüssel gespeichert - Weiter", es: "Clave guardada - Continuar", tr: "Anahtar kaydedildi - Devam et" },
+  verifyEnable: { en: "Verify & Enable", ru: "Подтвердить и включить", uk: "Підтвердити та увімкнути", de: "Verifizieren & aktivieren", es: "Verificar y habilitar", tr: "Doğrula ve etkinleştir" },
+  openAuthApp: { en: "Open your authenticator app and enter the 6-digit code for SpendX", ru: "Откройте приложение и введите 6-значный код для SpendX", uk: "Відкрийте додаток і введіть 6-значний код для SpendX", de: "Authenticator-App öffnen und 6-stelligen Code eingeben", es: "Abra su app e ingrese el código de 6 dígitos", tr: "Authenticator uygulamasını açın ve 6 haneli kodu girin" },
+  gaEnabled: { en: "Google Authenticator Enabled!", ru: "Google Authenticator включён!", uk: "Google Authenticator увімкнено!", de: "Google Authenticator aktiviert!", es: "Google Authenticator habilitado!", tr: "Google Authenticator etkinleştirildi!" },
+  gaEnabledDesc: { en: "Your account is now protected with Google Authenticator. You'll need your authenticator app to log in.", ru: "Ваш аккаунт теперь защищён Google Authenticator. Для входа понадобится приложение.", uk: "Ваш акаунт тепер захищено Google Authenticator. Для входу потрібен додаток.", de: "Ihr Konto ist jetzt mit Google Authenticator geschützt.", es: "Su cuenta está protegida con Google Authenticator.", tr: "Hesabınız artık Google Authenticator ile korunuyor." },
+  whatYouNeed: { en: "WHAT YOU'LL NEED", ru: "ЧТО ВАМ НУЖНО", uk: "ЩО ВАМ ПОТРІБНО", de: "WAS SIE BRAUCHEN", es: "LO QUE NECESITARÁ", tr: "GEREKLİ BELGELER" },
+  reqPassport: { en: "Valid passport or national ID", ru: "Действующий паспорт или удостоверение", uk: "Дійсний паспорт або посвідчення", de: "Gültiger Reisepass oder Ausweis", es: "Pasaporte o DNI válido", tr: "Geçerli pasaport veya kimlik" },
+  reqSelfie: { en: "Selfie for liveness check", ru: "Селфи для проверки", uk: "Селфі для перевірки", de: "Selfie zur Prüfung", es: "Selfie de verificación", tr: "Canlılık kontrolü için selfie" },
+  reqAddress: { en: "Proof of address (utility bill, bank statement)", ru: "Подтверждение адреса (счёт за услуги, выписка)", uk: "Підтвердження адреси (рахунок за послуги, виписка)", de: "Adressnachweis (Rechnung, Kontoauszug)", es: "Comprobante de domicilio", tr: "Adres kanıtı (fatura, hesap özeti)" },
+  startVerif: { en: "Start Verification", ru: "Начать верификацию", uk: "Почати верифікацію", de: "Verifizierung starten", es: "Iniciar verificación", tr: "Doğrulamayı başlat" },
+  verifInProgress: { en: "Verification in progress", ru: "Верификация в процессе", uk: "Верифікація в процесі", de: "Verifizierung läuft", es: "Verificación en progreso", tr: "Doğrulama devam ediyor" },
+  verifUsually: { en: "Usually 5-15 minutes. We'll notify you.", ru: "Обычно 5-15 минут. Мы уведомим вас.", uk: "Зазвичай 5-15 хвилин. Ми повідомимо вас.", de: "Dauert 5-15 Minuten. Wir benachrichtigen Sie.", es: "Toma 5-15 minutos. Le notificaremos.", tr: "Genellikle 5-15 dakika. Sizi bilgilendireceğiz." },
+  simApproval: { en: "Simulate Approval (demo)", ru: "Симулировать одобрение (демо)", uk: "Симулювати схвалення (демо)", de: "Genehmigung simulieren (Demo)", es: "Simular aprobación (demo)", tr: "Onay simüle et (demo)" },
+  fullAccessMsg: { en: "Full access unlocked. You can order any card tier.", ru: "Полный доступ открыт. Можете заказать любую карту.", uk: "Повний доступ відкрито. Можете замовити будь-яку картку.", de: "Voller Zugang freigeschaltet. Jede Kartenstufe bestellbar.", es: "Acceso completo. Puede ordenar cualquier tarjeta.", tr: "Tam erişim açıldı. Herhangi bir kart sipariş edebilirsiniz." },
+  payForCard: { en: "Pay for", ru: "Оплата за", uk: "Оплата за", de: "Zahlung für", es: "Pagar por", tr: "Ödeme:" },
+  payWithToken: { en: "Pay with token", ru: "Токен оплаты", uk: "Токен оплати", de: "Zahlungstoken", es: "Token de pago", tr: "Ödeme token'ı" },
+  network: { en: "NETWORK", ru: "СЕТЬ", uk: "МЕРЕЖА", de: "NETZWERK", es: "RED", tr: "AĞ" },
+  sendExactly: { en: "Send exactly", ru: "Отправьте точно", uk: "Надішліть точно", de: "Senden Sie genau", es: "Envíe exactamente", tr: "Tam olarak gönderin" },
+  sendWarning: { en: "Card will be issued after payment confirmation.", ru: "Карта будет выпущена после подтверждения оплаты.", uk: "Картку буде випущено після підтвердження оплати.", de: "Karte wird nach Zahlungsbestätigung ausgestellt.", es: "La tarjeta se emitirá tras confirmar el pago.", tr: "Kart ödeme onayından sonra düzenlenecektir." },
+  addrCopied: { en: "Address Copied!", ru: "Адрес скопирован!", uk: "Адресу скопійовано!", de: "Adresse kopiert!", es: "Dirección copiada!", tr: "Adres kopyalandı!" },
+  virtualBeingIssued: { en: "Your virtual card is being issued", ru: "Ваша виртуальная карта выпускается", uk: "Вашу віртуальну картку випускається", de: "Ihre virtuelle Karte wird ausgestellt", es: "Su tarjeta virtual se está emitiendo", tr: "Sanal kartınız düzenleniyor" },
+  orderConfirmTitle: { en: "Order", ru: "Заказать", uk: "Замовити", de: "Bestellen", es: "Pedir", tr: "Sipariş" },
+  issuanceFeeColon: { en: "Issuance fee:", ru: "Комиссия выпуска:", uk: "Комісія випуску:", de: "Ausgabegebühr:", es: "Tarifa de emisión:", tr: "Düzenleme ücreti:" },
+  ownedLabel: { en: "Owned", ru: "Куплена", uk: "Куплена", de: "Vorhanden", es: "Adquirida", tr: "Sahip" },
+  orderCardBtn: { en: "Order Card", ru: "Заказать карту", uk: "Замовити картку", de: "Karte bestellen", es: "Pedir tarjeta", tr: "Kart sipariş et" },
+  connecting: { en: "Connecting...", ru: "Подключение...", uk: "Підключення...", de: "Verbinden...", es: "Conectando...", tr: "Bağlanıyor..." },
+  welcome: { en: "Welcome", ru: "Добро пожаловать", uk: "Ласкаво просимо", de: "Willkommen", es: "Bienvenido", tr: "Hoş geldiniz" },
+  loginTelegram: { en: "Login with Telegram", ru: "Войти через Telegram", uk: "Увійти через Telegram", de: "Mit Telegram anmelden", es: "Iniciar con Telegram", tr: "Telegram ile giriş yap" },
+  termsAgree: { en: "By continuing, you agree to our", ru: "Продолжая, вы соглашаетесь с", uk: "Продовжуючи, ви погоджуєтесь з", de: "Durch Fortfahren stimmen Sie zu", es: "Al continuar, acepta nuestros", tr: "Devam ederek kabul edersiniz" },
+  termsOfService: { en: "Terms of Service", ru: "Условия использования", uk: "Умови використання", de: "Nutzungsbedingungen", es: "Términos de servicio", tr: "Kullanım şartları" },
+  privacyPolicy: { en: "Privacy Policy", ru: "Политика конфиденциальности", uk: "Політика конфіденційності", de: "Datenschutzrichtlinie", es: "Política de privacidad", tr: "Gizlilik politikası" },
+  // Tutorial
+  tutWelcome: { en: "Welcome to SpendX!", ru: "Добро пожаловать в SpendX!", uk: "Ласкаво просимо до SpendX!", de: "Willkommen bei SpendX!", es: "Bienvenido a SpendX!", tr: "SpendX'e hoş geldiniz!" },
+  tutWelcomeDesc: { en: "Let us show you around. This quick tour will help you get started with your crypto card.", ru: "Давайте покажем вам всё. Этот краткий тур поможет разобраться с крипто-картой.", uk: "Давайте покажемо вам все. Цей короткий тур допоможе розібратися з крипто-карткою.", de: "Lassen Sie uns Ihnen alles zeigen. Diese kurze Tour hilft Ihnen beim Einstieg.", es: "Permítanos mostrarle todo. Este breve tour le ayudará a comenzar.", tr: "Size her şeyi gösterelim. Bu kısa tur kripto kartınızla başlamanıza yardımcı olacak." },
+  tutReadyTitle: { en: "Ready to Start!", ru: "Готовы начать!", uk: "Готові почати!", de: "Bereit zum Start!", es: "Listo para empezar!", tr: "Başlamaya hazır!" },
+  tutReadyDesc: { en: "Order your first card and start spending crypto everywhere in the world.", ru: "Закажите первую карту и тратьте крипту по всему миру.", uk: "Замовте першу картку та витрачайте крипту по всьому світу.", de: "Bestellen Sie Ihre erste Karte und geben Sie Krypto überall aus.", es: "Ordene su primera tarjeta y gaste crypto en todo el mundo.", tr: "İlk kartınızı sipariş edin ve kripto harcamaya başlayın." },
+  tutCardReady: { en: "Your Card is Ready!", ru: "Ваша карта готова!", uk: "Ваша картка готова!", de: "Ihre Karte ist bereit!", es: "Su tarjeta está lista!", tr: "Kartınız hazır!" },
+  tutCardReadyDesc: { en: "Let's explore your dashboard. Here's everything you can do with your SpendX card.", ru: "Давайте изучим панель управления. Вот всё, что вы можете делать с картой SpendX.", uk: "Давайте вивчимо панель керування. Ось все, що ви можете робити з карткою SpendX.", de: "Lassen Sie uns Ihr Dashboard erkunden.", es: "Exploremos su panel. Esto es todo lo que puede hacer.", tr: "Kontrol panelinizi keşfedelim." },
+  tutAllSet: { en: "You're All Set!", ru: "Всё готово!", uk: "Все готово!", de: "Alles bereit!", es: "Todo listo!", tr: "Her şey hazır!" },
+  tutAllSetDesc: { en: "You now know everything about SpendX. Enjoy spending crypto everywhere!", ru: "Теперь вы знаете всё о SpendX. Тратьте крипту где угодно!", uk: "Тепер ви знаєте все про SpendX. Витрачайте крипту де завгодно!", de: "Sie kennen jetzt alles über SpendX. Viel Spaß!", es: "Ahora sabe todo sobre SpendX. Disfrute gastando crypto!", tr: "Artık SpendX hakkında her şeyi biliyorsunuz!" },
+  tutStartTour: { en: "Start Tour →", ru: "Начать тур →", uk: "Почати тур →", de: "Tour starten →", es: "Iniciar tour →", tr: "Tura başla →" },
+  tutSkip: { en: "Skip tutorial", ru: "Пропустить", uk: "Пропустити", de: "Überspringen", es: "Omitir", tr: "Atla" },
+  tutSkipShort: { en: "Skip", ru: "Пропустить", uk: "Пропустити", de: "Überspringen", es: "Omitir", tr: "Atla" },
+  tutNext: { en: "Next →", ru: "Далее →", uk: "Далі →", de: "Weiter →", es: "Siguiente →", tr: "İleri →" },
+  tutFinish: { en: "Finish ✓", ru: "Готово ✓", uk: "Готово ✓", de: "Fertig ✓", es: "Terminar ✓", tr: "Bitir ✓" },
+  tutLetsGo: { en: "Let's Go! 🚀", ru: "Поехали! 🚀", uk: "Поїхали! 🚀", de: "Los geht's! 🚀", es: "Vamos! 🚀", tr: "Hadi başlayalım! 🚀" },
+  tutBalance: { en: "Your Balance", ru: "Ваш баланс", uk: "Ваш баланс", de: "Ihr Saldo", es: "Su saldo", tr: "Bakiyeniz" },
+  tutBalanceDesc: { en: "Your total balance across all cards is shown here. Once you order a card it will be reflected instantly.", ru: "Здесь отображается общий баланс по всем картам. После заказа карты он обновится мгновенно.", uk: "Тут відображається загальний баланс по всіх картках. Після замовлення картки він оновиться миттєво.", de: "Hier sehen Sie Ihr Gesamtsaldo aller Karten.", es: "Aquí se muestra su saldo total de todas las tarjetas.", tr: "Tüm kartlarınızdaki toplam bakiyeniz burada gösterilir." },
+  tutLang: { en: "Language", ru: "Язык", uk: "Мова", de: "Sprache", es: "Idioma", tr: "Dil" },
+  tutLangDesc: { en: "Switch between 6 languages: English, Russian, Ukrainian, German, Spanish, Turkish. Changes apply instantly.", ru: "Переключайтесь между 6 языками: английский, русский, украинский, немецкий, испанский, турецкий.", uk: "Перемикайтесь між 6 мовами: англійська, російська, українська, німецька, іспанська, турецька.", de: "Wechseln Sie zwischen 6 Sprachen. Änderungen sofort wirksam.", es: "Cambie entre 6 idiomas. Los cambios se aplican al instante.", tr: "6 dil arasında geçiş yapın. Değişiklikler anında uygulanır." },
+  tutOrderCard: { en: "Order Your First Card", ru: "Закажите первую карту", uk: "Замовте першу картку", de: "Bestellen Sie Ihre erste Karte", es: "Ordene su primera tarjeta", tr: "İlk kartınızı sipariş edin" },
+  tutOrderCardDesc: { en: "Choose from 5 card tiers with different limits and fees. Complete KYC verification first, then pick your card.", ru: "Выберите из 5 уровней карт с разными лимитами. Сначала пройдите KYC, затем выберите карту.", uk: "Оберіть з 5 рівнів карток з різними лімітами. Спочатку пройдіть KYC, потім оберіть картку.", de: "Wählen Sie aus 5 Kartenstufen. Zuerst KYC abschließen.", es: "Elija entre 5 niveles de tarjeta. Complete KYC primero.", tr: "5 kart seviyesinden birini seçin. Önce KYC'yi tamamlayın." },
+  tutNav: { en: "Navigation", ru: "Навигация", uk: "Навігація", de: "Navigation", es: "Navegación", tr: "Gezinme" },
+  tutNavDesc: { en: "Cards - manage your cards and settings. SpendX - main dashboard. Settings - security, KYC, language.", ru: "Карты - управление картами. SpendX - главная панель. Настройки - безопасность, KYC, язык.", uk: "Картки - керування картками. SpendX - головна панель. Налаштування - безпека, KYC, мова.", de: "Karten - Kartenverwaltung. SpendX - Dashboard. Einstellungen - Sicherheit, KYC, Sprache.", es: "Tarjetas - gestión. SpendX - panel principal. Ajustes - seguridad, KYC, idioma.", tr: "Kartlar - kart yönetimi. SpendX - ana panel. Ayarlar - güvenlik, KYC, dil." },
+  tutTotalBalance: { en: "Total Balance", ru: "Общий баланс", uk: "Загальний баланс", de: "Gesamtsaldo", es: "Saldo total", tr: "Toplam bakiye" },
+  tutTotalBalanceDesc: { en: "See your combined balance across all cards. Tap the eye icon to hide sensitive info.", ru: "Общий баланс по всем картам. Нажмите на иконку глаза, чтобы скрыть данные.", uk: "Загальний баланс по всіх картках. Натисніть на іконку ока, щоб приховати дані.", de: "Gesamtsaldo aller Karten. Tippen Sie auf das Auge zum Ausblenden.", es: "Saldo combinado de todas las tarjetas. Toque el ojo para ocultar.", tr: "Tüm kartlarınızın toplam bakiyesi. Göz simgesine dokunarak gizleyin." },
+  tutActiveCard: { en: "Your Active Card", ru: "Ваша активная карта", uk: "Ваша активна картка", de: "Ihre aktive Karte", es: "Su tarjeta activa", tr: "Aktif kartınız" },
+  tutActiveCardDesc: { en: "Swipe left/right to switch cards. Tap to flip and see full details: number, CVV, expiry. Change the card design with your own photo!", ru: "Свайпайте влево/вправо для переключения карт. Нажмите для переворота и просмотра номера, CVV, срока. Смените дизайн своей фотографией!", uk: "Свайпайте вліво/вправо для переключення карток. Натисніть для перевороту та перегляду номера, CVV, терміну. Змініть дизайн своїм фото!", de: "Wischen Sie zum Kartenwechsel. Tippen zum Umdrehen. Ändern Sie das Design!", es: "Deslice para cambiar tarjetas. Toque para voltear. Personalice el diseño!", tr: "Kart değiştirmek için kaydırın. Çevirmek için dokunun. Tasarımı kendi fotoğrafınızla değiştirin!" },
+  tutQuickActions: { en: "Quick Actions", ru: "Быстрые действия", uk: "Швидкі дії", de: "Schnellaktionen", es: "Acciones rápidas", tr: "Hızlı işlemler" },
+  tutQuickActionsDesc: { en: "Top up your card with USDT/USDC, view transaction history, or open card details and settings.", ru: "Пополните карту через USDT/USDC, просмотрите историю транзакций или откройте настройки карты.", uk: "Поповніть картку через USDT/USDC, перегляньте історію транзакцій або відкрийте налаштування картки.", de: "Karte mit USDT/USDC aufladen, Transaktionsverlauf ansehen oder Kartendetails öffnen.", es: "Recargue con USDT/USDC, vea el historial o abra los detalles de la tarjeta.", tr: "USDT/USDC ile yükleyin, işlem geçmişini görüntüleyin veya kart ayarlarını açın." },
+  tutRecentActivity: { en: "Recent Activity", ru: "Последние операции", uk: "Останні операції", de: "Letzte Aktivität", es: "Actividad reciente", tr: "Son işlemler" },
+  tutRecentActivityDesc: { en: "Your latest transactions in real-time. Tap any transaction for full details: fees, exchange rates, status.", ru: "Последние транзакции в реальном времени. Нажмите на любую для подробностей: комиссии, курсы, статус.", uk: "Останні транзакції в реальному часі. Натисніть на будь-яку для деталей: комісії, курси, статус.", de: "Ihre Transaktionen in Echtzeit. Tippen Sie für Details.", es: "Sus transacciones en tiempo real. Toque para ver detalles.", tr: "Gerçek zamanlı işlemleriniz. Detaylar için dokunun." },
+  tutPricesHelp: { en: "Prices & Help", ru: "Курсы и помощь", uk: "Курси та допомога", de: "Kurse & Hilfe", es: "Precios y ayuda", tr: "Fiyatlar ve yardım" },
+  tutPricesHelpDesc: { en: "Live crypto prices updated every minute. Support team available via Telegram. FAQ for quick answers.", ru: "Курсы криптовалют обновляются каждую минуту. Поддержка через Telegram. FAQ для быстрых ответов.", uk: "Курси криптовалют оновлюються щохвилини. Підтримка через Telegram. FAQ для швидких відповідей.", de: "Live-Kryptopreise jede Minute aktualisiert. Support via Telegram.", es: "Precios crypto en vivo. Soporte por Telegram. FAQ para respuestas rápidas.", tr: "Canlı kripto fiyatları her dakika güncellenir. Telegram ile destek." },
+  tutLivePrices: { en: "Live Prices", ru: "Курсы криптовалют", uk: "Курси криптовалют", de: "Live-Kurse", es: "Precios en vivo", tr: "Canlı fiyatlar" },
+  tutLivePricesDesc: { en: "Real-time crypto prices updated every minute. Track BTC, ETH, SOL, TRX and more.", ru: "Курсы криптовалют в реальном времени. Обновляются каждую минуту. BTC, ETH, SOL, TRX и другие.", uk: "Курси криптовалют в реальному часі. Оновлюються щохвилини. BTC, ETH, SOL, TRX та інші.", de: "Kryptopreise in Echtzeit, jede Minute aktualisiert.", es: "Precios crypto en tiempo real, actualizados cada minuto.", tr: "Gerçek zamanlı kripto fiyatları, her dakika güncellenir." },
+  tutSupportFaq: { en: "Support & FAQ", ru: "Поддержка и FAQ", uk: "Підтримка та FAQ", de: "Support & FAQ", es: "Soporte y FAQ", tr: "Destek ve SSS" },
+  tutSupportFaqDesc: { en: "Need help? Contact our support team via Telegram or browse FAQ for quick answers.", ru: "Нужна помощь? Свяжитесь с поддержкой через Telegram или откройте FAQ.", uk: "Потрібна допомога? Зв'яжіться з підтримкою через Telegram або відкрийте FAQ.", de: "Hilfe benötigt? Support via Telegram oder FAQ durchsuchen.", es: "¿Necesita ayuda? Contacte soporte por Telegram o consulte las FAQ.", tr: "Yardıma mı ihtiyacınız var? Telegram ile destek veya SSS'ye göz atın." },
+  tutTopUpStable: { en: "Top Up with Stablecoins", ru: "Пополнение стейблкоинами", uk: "Поповнення стейблкоїнами", de: "Mit Stablecoins aufladen", es: "Recargar con stablecoins", tr: "Stablecoin ile yükleme" },
+  tutTopUpStableDesc: { en: "Quickly top up your card with USDT or USDC from any blockchain. Funds arrive in seconds.", ru: "Быстро пополните карту через USDT или USDC из любого блокчейна. Средства приходят за секунды.", uk: "Швидко поповніть картку через USDT або USDC з будь-якого блокчейну. Кошти надходять за секунди.", de: "Karte schnell mit USDT/USDC von jeder Blockchain aufladen.", es: "Recargue rápidamente con USDT/USDC desde cualquier blockchain.", tr: "Kartınızı herhangi bir blokzincirden USDT/USDC ile hızlıca yükleyin." },
+};
+
+const LangCtx = createContext("en");
+const useT = () => {
+  const lang = useContext(LangCtx);
+  return (key) => T[key]?.[lang] || T[key]?.en || key;
+};
+
+const LANG_FLAGS = { en: "🇬🇧", ru: "🇷🇺", uk: "🇺🇦", de: "🇩🇪", es: "🇪🇸", tr: "🇹🇷" };
+const LANG_NAMES = { en: "English", ru: "Русский", uk: "Українська", de: "Deutsch", es: "Español", tr: "Türkçe" };
+
+const LangDropdown = ({ lang, setLang, pos, onClose }) => {
+  if (!pos) return null;
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "absolute", inset: 0, zIndex: 9998, background: "rgba(0,0,0,.4)" }} />
+      <div style={{
+        position: "absolute", top: pos.top, right: pos.right, zIndex: 9999,
+        background: C.navy2, border: `1.5px solid ${C.cardBorder}`,
+        borderRadius: 16, padding: 6, minWidth: 150,
+        boxShadow: `0 12px 48px rgba(0,0,0,.9), 0 0 0 1px rgba(0,0,0,.4)`,
+      }}>
+        {Object.entries(LANG_FLAGS).map(([code, flag]) => (
+          <div key={code} onClick={() => { setLang(code); onClose(); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+              borderRadius: 12, cursor: "pointer",
+              background: lang === code ? `${C.accent}18` : "transparent",
+              borderBottom: code !== "tr" ? `1px solid ${C.gridSep}22` : "none",
+            }}>
+            <span style={{ fontSize: 20 }}>{flag}</span>
+            <span style={{ color: lang === code ? C.white : C.silver, fontSize: 13, fontWeight: lang === code ? 700 : 400, fontFamily: "DM Sans, sans-serif", flex: 1 }}>
+              {LANG_NAMES[code]}
+            </span>
+            {lang === code && <Ico d={ic.check} size={14} color={C.yellow} sw={2.5} />}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
+
+const LangSwitcher = ({ lang, onOpen }) => (
+  <div className="glass-btn" onClick={onOpen} style={{
+    display: "flex", alignItems: "center", gap: 4, padding: "4px 8px",
+    borderRadius: 20, cursor: "pointer", border: `1px solid rgba(255,255,255,.1)`,
+    background: "rgba(255,255,255,.05)",
+  }}>
+    <span style={{ fontSize: 16, lineHeight: 1 }}>{LANG_FLAGS[lang]}</span>
+    <span style={{ color: "#a3b5d6", fontSize: 8 }}>▼</span>
+  </div>
+);
+
+const C = {
+  navy: "#091428", navy2: "#0b1c34", navy3: "#0d1f3c", sectionAlt: "#0e2240",
+  panel: "#131d2f", panelLight: "#1a2740", gridSep: "#222838",
+  cardBg: "#2d3444", cardBorder: "#3a4558",
+  accent: "#1a5cff", accent2: "#4b8aff", vivid: "#93bdff", hoverAccent: "#4fc3f7",
+  cta: "#f5820d", ctaHover: "#ff9a2e", green: "#34d399", error: "#f87171",
+  white: "#f4f7ff", silver: "#dce6f8", muted: "#a3b5d6",
+  yellow: "#e8ff2e", lemon: "#d4f700", amber: "#ffb800", tangerine: "#ff8a2e",
+};
+const LOGO_B64 = "data:image/png;base64,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";
+const WORDMARK_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAADfCAYAAAAqTK2VAAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAABzHklEQVR42u2dd3wURRvHn5ndS0LoJaAI0qQ30ShYgAQERFApXujFBoLdVywoXA4QRBTEggRRioh4B0hTaSEJCCJNEAi9d5KQXndnnveP2w2XkJC7FAR8vnzGxMvd3k7Zmd8888wzAARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEP8RGBUBQRAE4cWYgXmMHSU5lshc3307wP+l78V8ficI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";
+
+
+
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body,#root{overflow-x:hidden!important;overscroll-behavior-x:none!important;position:relative;width:100%!important;max-width:100vw!important;touch-action:pan-y!important}
+::-webkit-scrollbar{width:0}
+
+@keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.tab-bar-safe{padding-bottom:max(6px,env(safe-area-inset-bottom))!important}
+
+.full-h{height:100vh;height:100dvh}
+
+/* ═══ AUTH CINEMATIC ANIMATION ═══ */
+@keyframes auth-fade-in{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
+@keyframes auth-fade-out{0%{opacity:1}100%{opacity:0}}
+@keyframes auth-slide-up{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes auth-glow-pulse{0%,100%{filter:drop-shadow(0 0 12px rgba(80,120,255,.08))}50%{filter:drop-shadow(0 0 24px rgba(80,120,255,.2))}}
+@keyframes auth-btn-glow{0%,100%{box-shadow:0 4px 20px rgba(42,171,238,.2)}50%{box-shadow:0 6px 30px rgba(42,171,238,.4)}}
+@keyframes auth-cursor-blink{0%,100%{opacity:0}50%{opacity:1}}
+@keyframes glow-breathe{0%,100%{opacity:.35}50%{opacity:.7}}
+@keyframes card-shine{0%{left:-100%}100%{left:200%}}
+@keyframes swipe-hint{0%,100%{transform:translateX(0);opacity:.4}50%{transform:translateX(5px);opacity:.9}}
+@keyframes energy-flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes toggle-spark{0%{transform:scale(0);opacity:1}100%{transform:scale(2.5);opacity:0}}
+@keyframes pulse-card{0%,100%{box-shadow:0 10px 30px rgba(26,92,255,.16)}50%{box-shadow:0 10px 40px rgba(26,92,255,.28)}}
+
+/* ═══ ANIMATED BORDER - yellow light running along edges ═══ */
+@keyframes border-run{0%{--a:0deg}100%{--a:360deg}}
+@property --a{syntax:"<angle>";initial-value:0deg;inherits:false}
+
+.glow-border{
+  position:relative;
+  isolation:isolate;
+}
+.glow-border::before{
+  content:'';
+  position:absolute;
+  inset:-2px;
+  border-radius:inherit;
+  padding:2px;
+  background:conic-gradient(from var(--a), transparent 0%, transparent 60%, ${C.yellow}80 75%, ${C.yellow} 80%, ${C.yellow}80 85%, transparent 100%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  animation:border-run 3s linear infinite;
+  pointer-events:none;
+}
+
+.glow-border-slow::before{
+  animation:border-run 5s linear infinite;
+}
+
+/* ═══ STRIPE TEXTURE for buttons (moiré pattern like Karta) ═══ */
+.stripe-texture{
+  position:relative;overflow:hidden;
+}
+.stripe-texture::before{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,.06) 2px,
+    rgba(255,255,255,.06) 3px
+  );
+  border-radius:inherit;
+  pointer-events:none;
+  z-index:1;
+}
+.stripe-texture::after{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 4px,
+    rgba(255,255,255,.03) 4px,
+    rgba(255,255,255,.03) 5px
+  );
+  border-radius:inherit;
+  pointer-events:none;
+  z-index:1;
+}
+
+/* Dense stripe for circle buttons */
+.stripe-dense{
+  position:relative;overflow:hidden;
+}
+.stripe-dense::before{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    -30deg,
+    transparent,
+    transparent 1.5px,
+    rgba(255,255,255,.08) 1.5px,
+    rgba(255,255,255,.08) 2.5px
+  );
+  border-radius:inherit;
+  pointer-events:none;
+  z-index:1;
+}
+.stripe-dense::after{
+  content:'';
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    60deg,
+    transparent,
+    transparent 3px,
+    rgba(255,255,255,.04) 3px,
+    rgba(255,255,255,.04) 4px
+  );
+  border-radius:inherit;
+  pointer-events:none;
+  z-index:1;
+}
+
+.s1{animation:fade-up .4s ease .05s both}
+.s2{animation:fade-up .4s ease .1s both}
+.s3{animation:fade-up .4s ease .15s both}
+.s4{animation:fade-up .4s ease .2s both}
+.s5{animation:fade-up .4s ease .25s both}
+
+.card-3d{perspective:1200px;cursor:pointer}
+.card-3d-inner{transition:transform .7s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;position:relative}
+.card-3d-inner.flipped{transform:rotateY(180deg)}
+.card-face{backface-visibility:hidden;-webkit-backface-visibility:hidden;position:absolute;top:0;left:0;width:100%;height:100%;border-radius:20px}
+.card-back{transform:rotateY(180deg)}
+
+.sheet-anim{animation:fade-up .3s cubic-bezier(.22,1,.36,1)}
+
+.row-h{transition:all .2s ease;cursor:pointer;border-radius:14px;position:relative}
+.row-h:active{transform:scale(.97)}
+.row-h:active::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border:1.5px solid rgba(232,255,46,.4);pointer-events:none}
+
+.glass-btn{transition:all .2s ease;cursor:pointer;border:1px solid rgba(58,69,88,.35)!important}
+.glass-btn:hover{border-color:rgba(232,255,46,.3)!important}
+.glass-btn:active{border-color:#e8ff2e!important;transform:scale(.98)}
+
+.menu-row{transition:all .2s ease;cursor:pointer;position:relative;border-radius:12px}
+.menu-row:active{transform:scale(.97)}
+.menu-row:active::after{content:'';position:absolute;inset:-1px;border-radius:inherit;border:1.5px solid rgba(232,255,46,.4);pointer-events:none}
+
+.link-glow{transition:all .15s ease;cursor:pointer}
+.link-glow:active{color:#e8ff2e!important;text-shadow:0 0 8px rgba(232,255,46,.4)}
+
+.pill-btn{transition:all .2s ease;cursor:pointer}
+.pill-btn:active{transform:scale(.95);background:#e8ff2e!important;color:#091428!important;box-shadow:0 0 20px rgba(232,255,46,.4)!important}
+
+.circle-btn{transition:all .2s ease;cursor:pointer}
+.circle-btn:active{transform:scale(.88);background:#e8ff2e!important;box-shadow:0 0 20px rgba(232,255,46,.4)!important}
+.circle-btn:active svg{stroke:#091428!important}
+
+.outline-btn{transition:all .2s ease;cursor:pointer;position:relative}
+.outline-btn:active{transform:scale(.97);border-color:#e8ff2e!important;box-shadow:0 0 18px rgba(232,255,46,.2)!important}
+.outline-btn:hover{border-color:rgba(232,255,46,.3)!important;box-shadow:0 0 10px rgba(232,255,46,.08)}
+
+.copy-chip{transition:all .15s ease;cursor:pointer}
+.copy-chip:active{background:#e8ff2e!important;transform:scale(.9)}
+.copy-chip:active svg{stroke:#091428!important}
+
+.limit-bar{transition:all .25s ease;cursor:pointer;border-radius:14px;padding:12px 14px;margin:0 -14px;position:relative;border:1.5px solid transparent}
+.limit-bar:hover{border-color:rgba(232,255,46,.5);box-shadow:0 0 16px rgba(232,255,46,.1)}
+.limit-bar:hover .limit-lbl{color:#dce6f8!important}
+.limit-bar:hover .limit-val{color:#e8ff2e!important;text-shadow:0 0 8px rgba(232,255,46,.3)}
+.limit-bar:hover .limit-fill{filter:brightness(1.3);box-shadow:0 0 12px rgba(255,184,0,.4)!important}
+.limit-bar:hover .limit-track{box-shadow:inset 0 0 6px rgba(232,255,46,.1)}
+.limit-bar:active{border-color:#e8ff2e!important;box-shadow:0 0 22px rgba(232,255,46,.2)!important;transform:scale(.98)}
+.limit-bar:active .limit-fill{filter:brightness(1.5)!important;box-shadow:0 0 20px rgba(255,184,0,.6)!important}
+.limit-bar:active .limit-val{color:#e8ff2e!important;text-shadow:0 0 12px rgba(232,255,46,.5)}
+
+/* Tab buttons hover glow */
+.tab-circle{transition:all .25s ease}
+.tab-circle:hover{box-shadow:0 0 16px ${C.yellow}50, 0 0 32px ${C.yellow}20 !important}
+
+@keyframes toast-in{0%{transform:translateX(-50%) translateY(20px) scale(.95);opacity:0}100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1}}
+@keyframes toast-out{0%{transform:translateX(-50%) translateY(0);opacity:1}100%{transform:translateX(-50%) translateY(-20px);opacity:0}}
+.toast-anim{animation:toast-in .25s ease,toast-out .3s ease 2s forwards}
+`;
+
+const Ico = ({ d, size = 20, color = C.silver, sw = 1.8 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" style={{position:"relative",zIndex:2}}>{d}</svg>
+);
+const ic = {
+  home: <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+  card: <><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
+  topup: <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+  send: <><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>,
+  back: <><polyline points="15 18 9 12 15 6"/></>,
+  eye: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+  eyeOff: <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>,
+  copy: <><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
+  snowflake: <><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></>,
+  chevron: <><polyline points="9 18 15 12 9 6"/></>,
+  check: <><polyline points="20 6 9 17 4 12"/></>,
+  lock: <><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+  unlock: <><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></>,
+  settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+  qr: <><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="22" y2="22"/></>,
+  history: <><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></>,
+  shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>,
+  earn: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+  iban: <><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></>,
+  headphones: <><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></>,
+  help: <><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+  phone: <><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></>,
+  key: <><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></>,
+  user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+  telegram: <><path d="M21.2 4.4L2.4 11.5c-.6.2-.6.7.1.9l4.8 1.5 1.8 5.8c.2.6.3.7.7.3l2.6-2.1 5 3.7c.5.4 1 .2 1.1-.5L21.9 5c.2-.7-.3-1-.7-.6z"/><path d="M8.3 13.9l9.2-7.1"/></>,
+  shop: <><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></>,
+  search: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+};
+
+/* ─── PILL BUTTON with stripe texture ─── */
+const PillBtn = ({ children, bg = C.yellow, color = C.navy, onClick, full, style: sx = {} }) => (
+  <button className="pill-btn" onClick={onClick} style={{
+    width: full ? "100%" : "auto", padding: "14px 28px", borderRadius: 50,
+    background: `linear-gradient(145deg, ${bg}, ${bg}cc)`, border: "none",
+    color, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+    boxShadow: `0 4px 20px ${bg}45, inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(0,0,0,.08)`,
+    position: "relative", ...sx,
+  }}><span style={{position:"relative",zIndex:2,display:"flex",alignItems:"center",gap:8}}>{children}</span></button>
+);
+
+/* ─── CIRCLE BUTTON with stripe texture ─── */
+const CircleBtn = ({ icon, color = C.tangerine, iconColor = C.navy, size = 48, onClick, label, shadow = true }) => (
+  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+    <div className="circle-btn" onClick={onClick} style={{
+      width: size, height: size, borderRadius: "50%",
+      background: `linear-gradient(145deg, ${color}, ${color}bb)`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      boxShadow: shadow ? `0 4px 14px ${color}40, inset 0 2px 0 rgba(255,255,255,.18), inset 0 -2px 0 rgba(0,0,0,.08)` : `inset 0 1px 0 rgba(255,255,255,.05)`,
+    }}>
+      <Ico d={ic[icon]} size={size * .42} color={iconColor} sw={2.2} />
+    </div>
+    {label && <span style={{ fontSize: 10, color: C.silver, fontFamily: "DM Sans, sans-serif", fontWeight: 500 }}>{label}</span>}
+  </div>
+);
+
+const Glass = ({ children, style: sx = {}, className = "", glow, onClick }) => (
+  <div className={className} onClick={onClick} style={{
+    background: `linear-gradient(145deg, ${C.panel}ee, ${C.panelLight}88)`,
+    backdropFilter: "blur(10px)", borderRadius: 20,
+    border: `1px solid ${glow ? "rgba(70,140,255,.2)" : "rgba(58,69,88,.35)"}`,
+    ...sx,
+  }}>{children}</div>
+);
+
+const Badge = ({ text, color = C.green }) => (
+  <span style={{
+    fontSize: 9, fontWeight: 600, color, background: `${color}15`, padding: "3px 10px", borderRadius: 50,
+    fontFamily: "DM Sans, sans-serif", letterSpacing: .6, textTransform: "uppercase", border: `1px solid ${color}25`,
+  }}>{text}</span>
+);
+
+const EnergyToggle = ({ active, onToggle, color = C.green }) => {
+  const [spark, setSpark] = useState(false);
+  const go = () => { setSpark(true); onToggle(); setTimeout(() => setSpark(false), 400); };
+  return (
+    <div onClick={go} style={{ width: 48, height: 26, cursor: "pointer", position: "relative" }}>
+      <div style={{
+        position: "absolute", inset: 0, borderRadius: 13,
+        background: active ? `${color}30` : C.panelLight,
+        border: `1.5px solid ${active ? color : C.cardBorder}`,
+        overflow: "hidden", transition: "all .3s",
+      }}>
+        <div style={{
+          position: "absolute", left: 0, top: 0, bottom: 0,
+          width: active ? "100%" : "0%",
+          background: active ? `linear-gradient(90deg, ${color}40, ${color}80, ${color}40)` : "transparent",
+          backgroundSize: "200% 100%", animation: active ? "energy-flow 2s ease infinite" : "none",
+          transition: "width .3s", borderRadius: 13,
+        }} />
+      </div>
+      <div style={{
+        position: "absolute", top: 3, left: active ? "calc(100% - 23px)" : 3,
+        width: 20, height: 20, borderRadius: "50%",
+        background: active ? color : C.cardBorder,
+        transition: "all .3s cubic-bezier(.4,.2,.2,1)",
+        boxShadow: active ? `0 0 8px ${color}` : "0 1px 3px rgba(0,0,0,.3)",
+      }} />
+      {spark && active && <div style={{
+        position: "absolute", left: "calc(100% - 13px)", top: "50%",
+        width: 6, height: 6, borderRadius: "50%", background: color,
+        animation: "toggle-spark .4s ease forwards", transform: "translate(-50%,-50%)",
+      }} />}
+    </div>
+  );
+};
+
+const TxRow = ({ name, amount, type, time, idx }) => (
+  <div className={`row-h s${idx}`} style={{
+    display: "flex", alignItems: "center", padding: "12px 0",
+    borderBottom: `1px solid rgba(34,40,56,.4)`,
+  }}>
+    <div style={{
+      width: 36, height: 36, borderRadius: "50%",
+      background: `linear-gradient(145deg, ${type === "in" ? C.green : C.accent}15, transparent)`,
+      border: `1px solid ${type === "in" ? C.green : C.accent}18`,
+      display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12,
+    }}>
+      <Ico d={ic[type === "in" ? "topup" : "send"]} size={14} color={type === "in" ? C.green : C.accent2} />
+    </div>
+    <div style={{ flex: 1 }}>
+      <div style={{ color: C.silver, fontSize: 13, fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{name}</div>
+      <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{time}</div>
+    </div>
+    <span style={{
+      color: type === "in" ? C.green : C.silver, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+      textShadow: type === "in" ? `0 0 10px ${C.green}35` : "none",
+    }}>{type === "in" ? "+" : "-"}{amount}</span>
+  </div>
+);
+
+/* ─── CARD SKIN CONFIG ─── */
+const CARD_SKINS = {
+  "#6b7280": { bg: ["#c4cbd8","#bcc4d2","#b5becf","#aeb8ca"], line: [80,90,130], dot: [70,80,120], light: true },
+  "#0ea5e9": { bg: ["#15919e","#1a9eab","#0e8999","#0a7585"], line: [200,230,240], dot: [180,215,230], light: false },
+  [C.accent]:  { bg: ["#0c2050","#112a60","#163470","#0e2555"], line: [150,180,220], dot: [130,165,210], light: false },
+  "#111827": { bg: ["#1e2a3a","#283648","#2c3a4e","#1a2535"], line: [160,185,210], dot: [140,170,200], light: false },
+  "#1e293b": { bg: ["#162030","#1c2a3c","#223348","#182535"], line: [150,178,205], dot: [135,165,195], light: false },
+};
+
+const NATIVE_CARD_IMG = {
+  "#6b7280": "data:image/jpeg;base64,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",
+  "#0ea5e9": "data:image/jpeg;base64,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",
+  [C.accent]: "data:image/jpeg;base64,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",
+  "#111827": "data:image/jpeg;base64,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",
+  "#1e293b": "data:image/jpeg;base64,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",
+};
+
+/* ─── CIRCUIT PATTERN SVG ─── */
+const CircuitBg = ({ seed = 1, color = "#111827" }) => {
+  const skin = CARD_SKINS[color] || CARD_SKINS["#111827"];
+  // Deterministic pseudo-random
+  const rng = (s) => { let x = Math.sin(s) * 10000; return x - Math.floor(x); };
+  let si = seed * 137;
+  const r = () => { si++; return rng(si); };
+  const ri = (a, b) => Math.floor(r() * (b - a)) + a;
+
+  const lines = [];
+  const dots = [];
+
+  for (let i = 0; i < 14; i++) {
+    let x = ri(20, 80), y = 45 + i * 28 + ri(-8, 8);
+    const pts = [`M${x},${y}`];
+    for (let s = 0; s < ri(3, 8); s++) {
+      if (r() < 0.75) {
+        x += ri(40, 130); if (x > 655) break;
+        pts.push(`L${x},${y}`);
+        if (r() > 0.45) dots.push([x, y, ri(3, 6)]);
+      } else {
+        y = Math.max(25, Math.min(403, y + (r() > 0.5 ? 1 : -1) * ri(10, 22)));
+        pts.push(`L${x},${y}`);
+      }
+    }
+    if (pts.length > 1) lines.push(pts.join(" "));
+  }
+  for (let i = 0; i < 12; i++) {
+    const bx = ri(80, 620), by = ri(35, 395), bl = ri(15, 55);
+    const d = [[1,0],[0,1],[0,-1]][ri(0,3)];
+    const ex = bx + bl * d[0], ey = by + bl * d[1];
+    if (ex > 10 && ex < 670 && ey > 10 && ey < 418) {
+      lines.push(`M${bx},${by} L${ex},${ey}`);
+      dots.push([ex, ey, ri(3, 5)]);
+    }
+  }
+  for (let i = 0; i < 18; i++) dots.push([ri(40, 640), ri(25, 405), ri(3, 6)]);
+
+  const [lr, lg, lb] = skin.line;
+  const [dr, dg, db] = skin.dot;
+
+  return (
+    <svg viewBox="0 0 680 428" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", borderRadius: "inherit" }} preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id={`bg${seed}`} x1="0" y1="0" x2=".8" y2="1">
+          {skin.bg.map((c, i) => <stop key={i} offset={`${i * 33}%`} stopColor={c} />)}
+        </linearGradient>
+        <radialGradient id={`gl${seed}`} cx=".3" cy=".35" r=".65">
+          <stop offset="0%" stopColor={`rgba(${lr},${lg},${lb},.08)`} />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+      </defs>
+      <rect width="680" height="428" rx="20" fill={`url(#bg${seed})`} />
+      <rect width="680" height="428" rx="20" fill={`url(#gl${seed})`} />
+      {lines.map((d, i) => <path key={`l${i}`} d={d} fill="none" stroke={`rgba(${lr},${lg},${lb},${(r() * 0.1 + 0.08).toFixed(3)})`} strokeWidth={(r() * 0.5 + 0.7).toFixed(1)} />)}
+      {dots.map(([x, y, sz], i) => <rect key={`d${i}`} x={x - sz / 2} y={y - sz / 2} width={sz} height={sz} rx="1" fill={`rgba(${dr},${dg},${db},${(r() * 0.12 + 0.1).toFixed(3)})`} />)}
+    </svg>
+  );
+};
+
+/* ─── 3D CARD with circuit pattern + VISA badge ─── */
+const CreditCard3D = ({ flipped, onFlip, compact, showToggle, numberVisible, onToggleNumber, cardData, locked, customSkin, onChangeSkin }) => {
+  const t = useT();
+  const cd = cardData || { tier: "Essential", last4: "4582", balance: "$2,150.00", color: C.accent };
+  const fullNum = `${cd.last4.slice(0,2)}82 7291 0033 ${cd.last4}`;
+  const skin = CARD_SKINS[cd.color] || CARD_SKINS["#111827"];
+  // Adaptive text: custom skin brightness OR default skin lightness
+  const isLightBg = customSkin ? customSkin.light : skin.light;
+  const txtColor = isLightBg ? "rgba(20,25,50," : "rgba(255,255,255,";
+  const txtShadow = isLightBg ? "none" : "0 1px 4px rgba(0,0,0,.4)";
+  const skinUrl = customSkin ? customSkin.url : null;
+  return (
+  <div className="card-3d" onClick={onFlip} style={{ height: compact ? 175 : 190 }}>
+    <div className={`card-3d-inner ${flipped ? "flipped" : ""}`} style={{ width: "100%", height: "100%" }}>
+      <div className="card-face glow-border" style={{
+        background: skin.bg[0],
+        padding: 22, display: "flex", flexDirection: "column", justifyContent: "space-between",
+      }}>
+        {/* Card background: custom skin or native image or circuit pattern */}
+        {skinUrl ? (
+          <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backgroundImage: `url(${skinUrl})`, backgroundSize: "cover", backgroundPosition: "center", overflow: "hidden" }} />
+        ) : NATIVE_CARD_IMG[cd.color] ? (
+          <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backgroundImage: `url(${NATIVE_CARD_IMG[cd.color]})`, backgroundSize: "cover", backgroundPosition: "center", overflow: "hidden" }} />
+        ) : (
+          <CircuitBg seed={cd.id || 1} color={cd.color} />
+        )}
+        {/* Shine animation */}
+        <div style={{ position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent)", animation: "card-shine 5s ease infinite", pointerEvents: "none", zIndex: 1, borderRadius: "inherit", overflow: "hidden" }} />
+        {/* Content */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", zIndex: 2 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: `${txtColor}.5)`, fontSize: 10, fontFamily: "DM Sans, sans-serif", letterSpacing: 3, textTransform: "uppercase" }}>SpendX</span>
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: C.green, padding: "3px 10px", borderRadius: 50,
+                fontFamily: "DM Sans, sans-serif", letterSpacing: .6, textTransform: "uppercase",
+                background: "rgba(0,0,0,.4)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
+                border: `1px solid ${C.green}40`, textShadow: `0 0 6px ${C.green}60`,
+              }}>{t("active")}</span>
+            </div>
+            <div style={{ color: isLightBg ? "#1a1f3a" : C.white, fontSize: 20, fontWeight: 800, fontFamily: "DM Sans, sans-serif", marginTop: 6, letterSpacing: .5, textShadow: txtShadow }}>{cd.tier}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ color: `${txtColor}.4)`, fontSize: 9, fontFamily: "DM Sans, sans-serif", marginBottom: 2 }}>balance</div>
+            <div style={{ color: `${txtColor}.85)`, fontSize: 16, fontWeight: 600, fontFamily: "DM Sans, sans-serif", transition: "all .3s" }}>
+              {numberVisible !== false ? cd.balance : "••••••"}
+            </div>
+          </div>
+        </div>
+        <div style={{ position: "relative", zIndex: 2, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 10 }}>
+            {/* Change skin button - next to tap-to-flip hint */}
+            {onChangeSkin && !locked && (
+              <div onClick={e => { e.stopPropagation(); onChangeSkin(); }} style={{
+                width: 24, height: 24, borderRadius: "50%", zIndex: 12,
+                background: "rgba(0,0,0,.35)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)",
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+                border: "1px solid rgba(255,255,255,.15)",
+              }}>
+                <Ico d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" size={10} color="rgba(255,255,255,.6)" />
+              </div>
+            )}
+            <div>
+              <div style={{ color: `${txtColor}.5)`, fontSize: 14, fontFamily: "DM Mono, monospace", letterSpacing: 4, transition: "all .3s" }}>
+                {numberVisible !== false ? `••••  ••••  ••••  ${cd.last4}` : `••••   ••••   ••••   ••••`}
+              </div>
+              <div style={{ display: "flex", gap: 6, marginTop: 6, alignItems: "center" }}>
+                <span style={{ color: `${txtColor}.25)`, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{t("tapFlip")}</span>
+                <span style={{ animation: "swipe-hint 1.5s ease infinite", color: `${txtColor}.3)`, fontSize: 11 }}>↻</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+            {showToggle && (
+              <div onClick={e => e.stopPropagation()} style={{ position: "relative", zIndex: 5 }}>
+                <EnergyToggle active={numberVisible} onToggle={onToggleNumber || (() => {})} color={C.yellow} />
+              </div>
+            )}
+            {/* VISA badge */}
+            <span style={{ color: isLightBg ? "rgba(20,25,50,.55)" : "rgba(255,255,255,.65)", fontSize: 16, fontWeight: 800, fontStyle: "italic", letterSpacing: 2, fontFamily: "DM Sans, sans-serif", textShadow: txtShadow }}>VISA</span>
+          </div>
+        </div>
+        {/* Lock overlay */}
+        {locked && (
+          <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", background: "rgba(0,0,0,.55)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", background: `${C.error}18`, border: `1.5px solid ${C.error}35`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+              <Ico d={ic.lock} size={20} color={C.error} />
+            </div>
+            <span style={{ color: C.error, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif", letterSpacing: 1 }}>LOCKED</span>
+          </div>
+        )}
+      </div>
+      <div className="card-face card-back glow-border" style={{
+        background: `linear-gradient(135deg, ${C.navy3} 0%, ${C.panel} 45%, ${cd.color || C.accent}30 100%)`,
+        padding: 22, display: "flex", flexDirection: "column", justifyContent: "space-between",
+        overflow: "visible",
+      }}>
+        <div style={{ height: 34, background: C.navy, margin: "-22px -22px 0", borderRadius: "20px 20px 0 0" }} />
+        {/* Card Number + Copy */}
+        <div style={{ background: `linear-gradient(90deg, ${C.panelLight}, ${C.cardBg})`, borderRadius: 12, padding: "10px 14px", marginTop: 14, border: `1px solid ${C.cardBorder}55`, display: "flex", alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: C.muted, fontSize: 9, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase" }}>{t("cardNumber")}</div>
+            <div style={{ color: C.white, fontSize: 14, fontFamily: "DM Mono, monospace", letterSpacing: 2, marginTop: 4, transition: "all .3s" }}>
+              {numberVisible !== false ? fullNum : `•••• •••• •••• ${cd.last4}`}
+            </div>
+          </div>
+          <CopyChip text={fullNum} />
+        </div>
+        {/* Expiry + CVV with Copy */}
+        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+          <div style={{ flex: 1, background: `linear-gradient(90deg, ${C.panelLight}, ${C.cardBg})`, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.cardBorder}55`, display: "flex", alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: C.muted, fontSize: 9, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase" }}>{t("expiry")}</div>
+              <div style={{ color: C.white, fontSize: 15, fontFamily: "DM Sans, sans-serif", marginTop: 3, transition: "all .3s" }}>
+                {numberVisible !== false ? "08/28" : "••/••"}
+              </div>
+            </div>
+            <CopyChip text="08/28" />
+          </div>
+          <div style={{ flex: 1, background: `linear-gradient(90deg, ${C.panelLight}, ${C.cardBg})`, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.cardBorder}55`, display: "flex", alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: C.muted, fontSize: 9, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase" }}>CVV</div>
+              <div style={{ color: numberVisible !== false ? C.green : C.white, fontSize: 15, fontFamily: "DM Sans, sans-serif", marginTop: 3, textShadow: numberVisible !== false ? `0 0 8px ${C.green}50` : "none", transition: "all .3s" }}>
+                {numberVisible !== false ? "847" : "•••"}
+              </div>
+            </div>
+            <CopyChip text="847" />
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: C.silver, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>Nicolas Tovt</span>
+            <CopyChip text="Nicolas Tovt" />
+          </div>
+          <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", animation: "swipe-hint 1.5s ease infinite" }}>{t("flip")}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  );
+};
+
+/* ─── TUTORIAL OVERLAY ─── */
+const TutorialOverlay = ({ steps, welcomeTitle, welcomeDesc, doneTitle, doneDesc, onComplete, scrollRef, lang, setLang, showLangPicker = true }) => {
+  const t = useT();
+  const [phase, setPhase] = useState("welcome"); // welcome | steps | done
+  const [step, setStep] = useState(0);
+  const [rect, setRect] = useState(null);
+  const measuringRef = useRef(false);
+
+  // Measure element position relative to .full-h container
+  const measure = (idx) => {
+    if (measuringRef.current) return;
+    const s = steps[idx];
+    if (!s) return;
+    const el = document.querySelector(`[data-tut="${s.id}"]`);
+    if (!el) { setRect(null); return; }
+    const container = scrollRef?.current?.parentElement || document.querySelector('.full-h');
+    if (!container) return;
+    const cr = container.getBoundingClientRect();
+    const sr = scrollRef?.current;
+    const er = el.getBoundingClientRect();
+    const pad = s.pad || 8;
+
+    // Clamp rect to stay within visible area (respects tab bar)
+    const clampRect = (r) => {
+      const margin = 6;
+      // Use scroll container bottom (not full container) to avoid overlap with tab bar
+      const srBR = sr ? sr.getBoundingClientRect() : cr;
+      const maxBottom = srBR.bottom - cr.top - margin;
+      let x = Math.max(margin, r.x);
+      let y = Math.max(margin, r.y);
+      let w = Math.min(r.w, cr.width - margin * 2);
+      let h = Math.min(r.h, maxBottom - y);
+      // Ensure right edge doesn't exceed
+      if (x + w > cr.width - margin) w = cr.width - margin - x;
+      return { x, y, w, h };
+    };
+
+    // Check if element is visible in the scroll viewport
+    const srRect = sr ? sr.getBoundingClientRect() : cr;
+    const isAbove = er.bottom < srRect.top + 10;
+    const isBelow = er.top > srRect.bottom - 10;
+    // For pos:"above" elements, also check there's enough room for tooltip above element
+    const needsTooltipRoom = s.pos === "above" && sr && (er.top - srRect.top < 220);
+    // Check if element bottom is clipped by viewport (e.g. by tab bar)
+    const isPartiallyClipped = sr && (er.bottom > srRect.bottom - 20);
+
+    if ((isAbove || isBelow || needsTooltipRoom || isPartiallyClipped) && sr) {
+      // Need to scroll to element - use offsetTop chain for accurate position
+      measuringRef.current = true;
+      let totalOffset = 0;
+      let node = el;
+      while (node && node !== sr) {
+        totalOffset += node.offsetTop || 0;
+        node = node.offsetParent;
+      }
+      // For pos:"above" steps, element must be lower in viewport so tooltip fits above it.
+      let scrollTarget;
+      if (s.pos === "above") {
+        // Put element at ~35% down from top, leaving ~35% of viewport for tooltip above
+        scrollTarget = Math.max(0, totalOffset - Math.max(220, sr.clientHeight * 0.35));
+      } else {
+        scrollTarget = Math.max(0, totalOffset - 80);
+      }
+      sr.scrollTo({ top: scrollTarget, behavior: "instant" });
+      setTimeout(() => {
+        measuringRef.current = false;
+        // Re-measure after scroll completes
+        const er2 = el.getBoundingClientRect();
+        setRect(clampRect({
+          x: er2.left - cr.left - pad,
+          y: er2.top - cr.top - pad,
+          w: er2.width + pad * 2,
+          h: er2.height + pad * 2,
+        }));
+      }, 500);
+      return;
+    }
+
+    // Element is visible - set rect directly
+    setRect(clampRect({
+      x: er.left - cr.left - pad,
+      y: er.top - cr.top - pad,
+      w: er.width + pad * 2,
+      h: er.height + pad * 2,
+    }));
+  };
+
+  const startSteps = () => {
+    // Scroll to top first, then start measuring
+    const sr = scrollRef?.current;
+    if (sr) sr.scrollTop = 0;
+    setStep(0);
+    setPhase("steps");
+    setTimeout(() => measure(0), 300);
+  };
+
+  const goStep = (idx) => {
+    setStep(idx);
+    // Don't clear rect - let CSS transition animate it smoothly
+    setTimeout(() => measure(idx), 50);
+  };
+
+  const prev = () => { if (step > 0) goStep(step - 1); };
+
+  const next = () => {
+    if (step < steps.length - 1) goStep(step + 1);
+    else { setPhase("done"); setRect(null); }
+  };
+
+  const finish = () => { onComplete(); };
+
+  // Language options for welcome page
+  const LANGS = [
+    { code: "en", flag: "🇬🇧", name: "English" },
+    { code: "ru", flag: "🇷🇺", name: "Русский" },
+    { code: "uk", flag: "🇺🇦", name: "Українська" },
+    { code: "de", flag: "🇩🇪", name: "Deutsch" },
+    { code: "es", flag: "🇪🇸", name: "Español" },
+    { code: "tr", flag: "🇹🇷", name: "Türkçe" },
+  ];
+
+  // Welcome phase - full screen modal
+  if (phase === "welcome") return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 500, background: "rgba(5,10,20,.92)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 30px", animation: "fade-up .5s ease", overflow: "auto" }}>
+      <img src={WORDMARK_B64} alt="SpendX" style={{ width: 200, height: "auto", objectFit: "contain", marginBottom: 16, animation: "auth-fade-in .8s ease forwards" }} />
+      <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", lineHeight: 1.7, textAlign: "center", marginBottom: 28, maxWidth: 260 }}>{welcomeDesc}</div>
+
+      {showLangPicker && (
+      <div style={{ width: "100%", maxWidth: 280, marginBottom: 28 }}>
+        <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10, textAlign: "center" }}>{t("tutLang")}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+          {LANGS.map(l => (
+            <div key={l.code} onClick={() => setLang(l.code)} style={{
+              padding: "10px 6px", borderRadius: 14, cursor: "pointer",
+              background: lang === l.code ? `${C.yellow}15` : `${C.panel}80`,
+              border: `1.5px solid ${lang === l.code ? C.yellow + "50" : C.cardBorder + "30"}`,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+              transition: "all .2s",
+              boxShadow: lang === l.code ? `0 0 12px ${C.yellow}20` : "none",
+            }}>
+              <span style={{ fontSize: 20 }}>{l.flag}</span>
+              <span style={{ color: lang === l.code ? C.yellow : C.muted, fontSize: 10, fontWeight: lang === l.code ? 700 : 400, fontFamily: "DM Sans, sans-serif" }}>{l.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      )}
+
+      <PillBtn bg={C.yellow} color={C.navy} onClick={startSteps} full style={{ maxWidth: 260, padding: "14px 24px", fontSize: 15 }}>
+        {t("tutStartTour")}
+      </PillBtn>
+      <button onClick={finish} style={{ background: "none", border: "none", color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 14, cursor: "pointer", padding: 8 }}>{t("tutSkip")}</button>
+    </div>
+  );
+
+  // Done phase - full screen modal
+  if (phase === "done") return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 500, background: "rgba(5,10,20,.88)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40, animation: "fade-up .5s ease" }}>
+      <div style={{ width: 72, height: 72, borderRadius: "50%", background: `${C.green}15`, border: `2px solid ${C.green}40`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, boxShadow: `0 0 30px ${C.green}20` }}>
+        <Ico d={ic.check} size={32} color={C.green} sw={2.5} />
+      </div>
+      <div style={{ color: C.white, fontSize: 20, fontWeight: 800, fontFamily: "DM Sans, sans-serif", marginBottom: 10, textAlign: "center" }}>{doneTitle}</div>
+      <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", lineHeight: 1.7, textAlign: "center", marginBottom: 32, maxWidth: 260 }}>{doneDesc}</div>
+      <PillBtn bg={C.yellow} color={C.navy} onClick={finish} full style={{ maxWidth: 240, padding: "14px 24px", fontSize: 15 }}>
+        {t("tutLetsGo")}
+      </PillBtn>
+    </div>
+  );
+
+  // Steps phase - spotlight overlay with smooth CSS transitions
+  const s = steps[step];
+  const dots = steps.map((_, i) => (
+    <div key={i} style={{ width: i === step ? 18 : 6, height: 6, borderRadius: 50, background: i < step ? C.green : i === step ? C.yellow : `${C.muted}40`, boxShadow: i === step ? `0 0 8px ${C.yellow}40` : "none", transition: "all .3s" }} />
+  ));
+
+  return (
+    <div style={{ position: "absolute", inset: 0, zIndex: 500 }}>
+      {/* SVG mask spotlight - smooth transitions on the cutout */}
+      <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 501 }}>
+        <defs>
+          <mask id="tut-mask">
+            <rect width="100%" height="100%" fill="white" />
+            {rect && <rect x={rect.x} y={rect.y} width={rect.w} height={rect.h} rx="20" fill="black" style={{ transition: "all .5s cubic-bezier(.25,.8,.25,1)" }} />}
+          </mask>
+        </defs>
+        <rect width="100%" height="100%" fill="rgba(5,10,20,.82)" mask="url(#tut-mask)" />
+      </svg>
+      {/* Highlight ring - smooth CSS transition */}
+      {rect && <div style={{ position: "absolute", left: rect.x, top: rect.y, width: rect.w, height: rect.h, border: `2px solid ${C.yellow}50`, borderRadius: 20, boxShadow: `0 0 20px ${C.yellow}15, inset 0 0 20px ${C.yellow}05`, zIndex: 502, pointerEvents: "none", transition: "all .5s cubic-bezier(.25,.8,.25,1)", animation: "glow-breathe 2s ease infinite" }} />}
+      {/* Tooltip */}
+      {s && <div key={step} style={{
+        position: "absolute", zIndex: 510, left: 20, right: 20,
+        ...(s.pos === "above" && rect ? { top: Math.max(10, rect.y - 210) } : {}),
+        ...(s.pos === "below" && rect ? { top: rect.y + rect.h + 12 } : {}),
+        ...(!rect ? { top: "50%", transform: "translateY(-50%)" } : {}),
+        background: `${C.panel}f0`, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+        border: `1.5px solid ${C.yellow}30`, borderRadius: 20, padding: 20,
+        boxShadow: `0 12px 40px rgba(0,0,0,.5), 0 0 20px ${C.yellow}08`,
+        transition: "top .5s cubic-bezier(.25,.8,.25,1), bottom .5s cubic-bezier(.25,.8,.25,1)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(145deg, ${C.yellow}, #c8e000)`, color: C.navy, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 0 12px ${C.yellow}30` }}>{step + 1}</div>
+          <div style={{ color: C.white, fontSize: 15, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{s.title}</div>
+        </div>
+        <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", lineHeight: 1.6, marginBottom: 16 }}>{s.desc}</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: 5 }}>{dots}</div>
+          <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            {step > 0 && <button onClick={prev} style={{ background: "none", border: `1px solid ${C.cardBorder}44`, color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", cursor: "pointer", padding: "8px 14px", borderRadius: 50 }}>←</button>}
+            <button onClick={finish} style={{ background: "none", border: "none", color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", cursor: "pointer", padding: "8px 12px" }}>{t("tutSkipShort")}</button>
+            <PillBtn bg={C.yellow} color={C.navy} onClick={next} style={{ padding: "10px 24px", fontSize: 13 }}>
+              {step === steps.length - 1 ? t("tutFinish") : t("tutNext")}
+            </PillBtn>
+          </div>
+        </div>
+      </div>}
+      {/* Click blocker - captures clicks but only on the dark area, not highlighted zone */}
+      <div onClick={() => {}} style={{ position: "absolute", inset: 0, zIndex: 503 }} />
+    </div>
+  );
+};
+
+/* ─── TAB BAR ─── */
+const TabBar = ({ active, onNav }) => {
+  const tt = useT();
+  const tabs = [
+    { id: "card", icon: "card", k: "cards" },
+    { id: "home", icon: "home", k: "spendx" },
+    { id: "settings", icon: "settings", k: "settings" },
+  ];
+  const SZ = 52;
+  return (
+    <div data-tut="tab-bar" className="tab-bar-safe" style={{
+      background: `${C.navy2}`, backdropFilter: "blur(14px)",
+      borderTop: `1px solid ${C.gridSep}55`,
+      display: "flex", alignItems: "center", justifyContent: "space-around",
+      flexShrink: 0, paddingTop: 4, paddingBottom: 6,
+    }}>
+      {tabs.map(t => {
+        const isHome = t.id === "home";
+        const isActive = active === t.id;
+        return (
+          <div key={t.id} onClick={() => onNav(t.id)} style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            cursor: "pointer",
+          }}>
+            <div className="tab-circle" style={{
+              width: SZ, height: SZ, borderRadius: "50%",
+              background: isHome
+                ? `linear-gradient(145deg, ${C.yellow}, ${C.lemon})`
+                : (isActive
+                    ? `linear-gradient(145deg, ${C.panelLight}, ${C.panel})`
+                    : `linear-gradient(145deg, ${C.panel}cc, ${C.navy3})`),
+              display: "flex", alignItems: "center", justifyContent: "center",
+              border: isHome
+                ? `2px solid ${C.yellow}70`
+                : `1.5px solid ${isActive ? C.yellow + "40" : C.cardBorder + "44"}`,
+              boxShadow: isHome
+                ? `0 0 18px ${C.yellow}50, 0 0 6px ${C.yellow}30`
+                : (isActive ? `0 0 12px ${C.yellow}30` : "none"),
+              transition: "all .3s",
+            }}>
+              {isHome ? (
+                <img src={LOGO_B64} alt="X" width={30} height={30} style={{ position: "relative", zIndex: 2, objectFit: "contain" }} />
+              ) : (
+                <Ico d={ic[t.icon]} size={22} color={isActive ? C.yellow : C.muted} />
+              )}
+            </div>
+            <span style={{
+              fontSize: 10, fontFamily: "DM Sans, sans-serif",
+              color: isHome ? C.yellow : (isActive ? C.yellow : C.muted),
+              fontWeight: isActive || isHome ? 700 : 400,
+            }}>{t.k === "spendx" ? "SpendX" : tt(t.k)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/* ─── LIVE CRYPTO RATES via LI.FI ─── */
+const TOKENS_CONFIG = [
+  { sym: "BTC", name: "Bitcoin", color: "#f7931a", chain: 1, address: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+    icon: <svg width={18} height={18} viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#f7931a"/><circle cx="16" cy="16" r="13" fill="none" stroke="#fff" strokeWidth=".5" opacity=".3"/><path d="M20.2 14.2c.3-1.9-1.2-2.9-3.1-3.6l.6-2.6-1.6-.4-.6 2.5c-.4-.1-.8-.2-1.3-.3l.6-2.5-1.6-.4-.6 2.6c-.4-.1-.7-.2-1-.2l-2.2-.6-.4 1.7s1.2.3 1.1.3c.6.2.7.6.7 1l-.7 2.9c0 0 .1 0 .1.1h-.1l-1 4.1c-.1.2-.3.5-.7.4 0 0-1.1-.3-1.1-.3l-.8 1.8 2.1.5c.4.1.8.2 1.1.3l-.7 2.6 1.6.4.6-2.6c.4.1.9.2 1.3.3l-.6 2.6 1.6.4.7-2.6c2.6.5 4.6.3 5.4-2.1.7-1.9 0-3-1.4-3.7 1-.2 1.8-1 2-2.4zm-3.5 5c-.5 2-3.8.9-4.9.7l.9-3.5c1.1.3 4.6.8 4 2.8zm.5-5c-.4 1.8-3.2.9-4.1.7l.8-3.2c.9.2 3.8.7 3.3 2.5z" fill="#fff"/></svg> },
+  { sym: "ETH", name: "Ethereum", color: "#627eea", chain: 1, address: "0x0000000000000000000000000000000000000000",
+    icon: <svg width={18} height={18} viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#627eea"/><path d="M16 4l-8 13 8 4.5 8-4.5z" fill="#fff" opacity=".6"/><path d="M16 4l-8 13 8-2z" fill="#fff" opacity=".9"/><path d="M16 4l8 13-8-2z" fill="#fff" opacity=".75"/><path d="M16 23.5l-8-4.5 8 9 8-9z" fill="#fff" opacity=".6"/><path d="M16 23.5l-8-4.5 8 2z" fill="#fff" opacity=".9"/><path d="M16 23.5l8-4.5-8 2z" fill="#fff" opacity=".75"/></svg> },
+  { sym: "SOL", name: "Solana", color: "#14f195", chain: 1151111081099710, address: "0x0000000000000000000000000000000000000000",
+    icon: <svg width={18} height={18} viewBox="0 0 32 32"><defs><linearGradient id="solG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#9945ff"/><stop offset="100%" stopColor="#14f195"/></linearGradient></defs><circle cx="16" cy="16" r="15" fill="url(#solG)"/><path d="M9 20.5h11.5l2.5-2.5H11.5z" fill="#fff" opacity=".95"/><path d="M9 14h11.5l2.5 2.5H11.5z" fill="#fff" opacity=".7"/><path d="M9 11.5h11.5l2.5 2.5H11.5z" fill="#fff" opacity=".95"/></svg> },
+  { sym: "TRX", name: "Tron", color: "#ff0013", chain: 1, address: "0x0000000000000000000000000000000000000000",
+    icon: <svg width={18} height={18} viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#ff0013"/><path d="M8 9l16 2-9 14z" fill="#fff" opacity=".9"/><path d="M8 9l8 3-1 8z" fill="#fff" opacity=".65"/></svg> },
+];
+
+const CryptoRates = () => {
+  const t = useT();
+  const STATIC = {
+    BTC: { price: 84235.40, change: 1.8 },
+    ETH: { price: 1587.92, change: -0.4 },
+    SOL: { price: 119.67, change: 3.2 },
+    TRX: { price: 0.2451, change: 0.7 },
+  };
+  const [prices, setPrices] = useState(STATIC);
+  const [isLive, setIsLive] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
+
+  const fetchPrices = () => {
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,tron&vs_currencies=usd&include_24hr_change=true")
+      .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(cg => {
+        if (cg.bitcoin) {
+          setPrices({
+            BTC: { price: cg.bitcoin.usd, change: cg.bitcoin.usd_24h_change || 0 },
+            ETH: { price: cg.ethereum?.usd || 0, change: cg.ethereum?.usd_24h_change || 0 },
+            SOL: { price: cg.solana?.usd || 0, change: cg.solana?.usd_24h_change || 0 },
+            TRX: { price: cg.tron?.usd || 0, change: cg.tron?.usd_24h_change || 0 },
+          });
+          setIsLive(true);
+          setLastUpdate(new Date());
+        }
+      })
+      .catch(() => {
+        // Try LI.FI as second source
+        fetch("https://li.quest/v1/token?chain=1&token=0x0000000000000000000000000000000000000000")
+          .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+          .then(data => {
+            if (data && data.priceUSD) {
+              setPrices(prev => ({ ...prev, ETH: { price: parseFloat(data.priceUSD), change: prev.ETH.change } }));
+              setIsLive(true);
+              setLastUpdate(new Date());
+            }
+          })
+          .catch(() => {}); // Stay with static
+      });
+  };
+
+  useEffect(() => {
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fmt = (n) => {
+    if (!n && n !== 0) return "—";
+    if (n >= 1000) return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    if (n >= 1) return n.toFixed(2);
+    return n.toFixed(4);
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
+      {TOKENS_CONFIG.map((c, i) => {
+        const p = prices[c.sym];
+        const price = fmt(p.price);
+        const change = p.change;
+        const up = change >= 0;
+        const changeStr = `${up ? "+" : ""}${change.toFixed(1)}%`;
+        return (
+          <Glass key={c.sym} className="glass-btn" style={{
+            display: "flex", alignItems: "center", gap: 12, padding: "9px 14px", cursor: "pointer",
+          }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: "50%",
+              background: `${c.color}15`, border: `1px solid ${c.color}30`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: `0 0 8px ${c.color}15`,
+            }}>{c.icon}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ color: C.white, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{c.sym}</span>
+                <span style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{c.name}</span>
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ color: C.white, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>${price}</div>
+              <div style={{
+                color: up ? C.green : C.error, fontSize: 10, fontWeight: 600,
+                fontFamily: "DM Sans, sans-serif", marginTop: 1,
+                textShadow: up ? `0 0 6px ${C.green}30` : `0 0 6px ${C.error}30`,
+              }}>{changeStr}</div>
+            </div>
+          </Glass>
+        );
+      })}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, padding: "4px 4px" }}>
+        <div style={{ width: 5, height: 5, borderRadius: "50%", background: isLive ? C.green : C.amber, boxShadow: `0 0 6px ${isLive ? C.green : C.amber}` }} />
+        <span style={{ color: C.muted, fontSize: 9, fontFamily: "DM Sans, sans-serif" }}>
+          {isLive ? `${t("live")} · ${lastUpdate.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}` : t("demoPrices")}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/* ─── HOME ─── */
+const HomeScreen = ({ onNav, onSheet, activeCard, hidden, setHidden, setActiveCard, showToast, myCards, lockedCards, cardSkins, openSkinPicker, lang, setLang, openLangDD }) => {
+  const t = useT();
+  const [flipped, setFlipped] = useState(false);
+  const [selectedTx, setSelectedTx] = useState(null);
+  const touchRef = useRef({ x: 0, y: 0 });
+
+  // Empty state - no cards
+  if (!myCards || myCards.length === 0 || !activeCard) return (
+    <div style={{ padding: "0 0 12px" }}>
+      <div style={{ padding: "14px 20px 0" }}>
+        <div data-tut="balance" className="s1" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("totalBalance")}</div>
+            <div style={{ color: C.white, fontSize: 30, fontWeight: 800, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>$0.00</div>
+          </div>
+          <span data-tut="lang-switcher"><LangSwitcher lang={lang} onOpen={openLangDD} /></span>
+        </div>
+      </div>
+
+      {/* Empty card placeholder */}
+      <div style={{ padding: "0 20px", marginBottom: 16 }}>
+        <div data-tut="order-card" className="glass-btn" onClick={() => onSheet("shop")} style={{
+          borderRadius: 20, padding: "20px 20px", cursor: "pointer",
+          background: `linear-gradient(145deg, ${C.panel}ee, ${C.navy3})`,
+          border: `2px dashed ${C.yellow}30`,
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          textAlign: "center",
+        }}>
+          <div style={{
+            width: 42, height: 42, borderRadius: "50%",
+            background: `${C.yellow}12`, border: `1.5px solid ${C.yellow}25`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 8,
+          }}>
+            <Ico d={ic.shop} size={20} color={C.yellow} />
+          </div>
+          <div style={{ color: C.white, fontSize: 15, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("noCards")}</div>
+          <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 4, lineHeight: 1.5 }}>
+            {t("noCardsDesc")}
+          </div>
+          <PillBtn bg={C.yellow} color={C.navy} full style={{ marginTop: 14, maxWidth: 220, padding: "12px 24px" }}>
+            <Ico d={ic.card} size={16} color={C.navy} sw={2} /> {t("orderFirst")}
+          </PillBtn>
+        </div>
+      </div>
+
+      {/* Useful section */}
+      <div style={{ padding: "0 20px" }}>
+        <div data-tut="live-prices-empty" style={{ marginBottom: 10 }}>
+        <div style={{ color: C.white, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 10 }}>{t("useful")}</div>
+
+        <CryptoRates />
+        </div>
+
+        <div data-tut="support-faq-empty" style={{ display: "flex", gap: 8 }}>
+          <Glass className="glass-btn" onClick={openSupport} style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", border: `1px solid ${C.cardBorder}44` }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${C.hoverAccent}18`, border: `1px solid ${C.hoverAccent}30`, display: "flex", alignItems: "center", justifyContent: "center" }}><Ico d={ic.headphones} size={18} color={C.hoverAccent} /></div>
+            <span style={{ color: C.silver, fontSize: 11, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("support")}</span>
+          </Glass>
+          <Glass className="glass-btn" onClick={() => onSheet("faq")} style={{ flex: 1, padding: "14px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", border: `1px solid ${C.cardBorder}44` }}>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `${C.amber}18`, border: `1px solid ${C.amber}30`, display: "flex", alignItems: "center", justifyContent: "center" }}><Ico d={ic.help} size={18} color={C.amber} /></div>
+            <span style={{ color: C.silver, fontSize: 11, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("faq")}</span>
+          </Glass>
+        </div>
+      </div>
+    </div>
+  );
+
+  const totalBalance = "$" + myCards.reduce((sum, c) => sum + parseFloat(c.balance.replace(/[$,]/g, "")), 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Swipe between cards
+  const onTouchStart = (e) => { touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  const onTouchEnd = (e) => {
+    const dx = e.changedTouches[0].clientX - touchRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchRef.current.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      const idx = myCards.findIndex(c => c.id === activeCard.id);
+      if (dx < 0 && idx < myCards.length - 1) { setActiveCard(myCards[idx + 1]); setFlipped(false); showToast(`${myCards[idx + 1].tier} — main`); }
+      if (dx > 0 && idx > 0) { setActiveCard(myCards[idx - 1]); setFlipped(false); showToast(`${myCards[idx - 1].tier} — main`); }
+    }
+  };
+  const cardIdx = myCards.findIndex(c => c.id === activeCard.id);
+  const txName = (n) => n === "Card Top Up" ? t("cardTopUp") : n;
+
+  if (selectedTx) {
+    return <TxDetailSheet tx={selectedTx} cardInfo={activeCard} onClose={() => setSelectedTx(null)} />;
+  }
+
+  return (
+    <div style={{ padding: "0 0 20px", overflowX: "hidden" }}>
+      <div style={{ padding: "14px 20px 0" }}>
+        <div data-tut="balance" className="s1" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("totalBalance")}</div>
+            <div style={{ color: C.white, fontSize: 30, fontWeight: 800, fontFamily: "DM Sans, sans-serif", marginTop: 2, transition: "all .3s" }}>
+              {hidden ? "••••••" : totalBalance}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <LangSwitcher lang={lang} onOpen={openLangDD} />
+            {/* Eye toggle */}
+            <div className="circle-btn" onClick={() => setHidden(!hidden)} style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: hidden ? `${C.yellow}15` : C.panel,
+              border: `1px solid ${hidden ? C.yellow + "40" : C.cardBorder + "44"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all .25s",
+              boxShadow: hidden ? `0 0 10px ${C.yellow}20` : "none",
+            }}>
+              <Ico d={hidden ? ic.eyeOff : ic.eye} size={18} color={hidden ? C.yellow : C.muted} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-tut="active-card" className="s2" style={{ padding: "0 20px", marginBottom: 6, touchAction: "pan-y" }}
+        onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <CreditCard3D flipped={flipped} onFlip={() => setFlipped(!flipped)} numberVisible={!hidden} cardData={activeCard} locked={lockedCards && lockedCards.has(activeCard.id)} customSkin={cardSkins && cardSkins[activeCard.id]} onChangeSkin={() => openSkinPicker(activeCard)} />
+      </div>
+
+      {/* Card dots + tier label */}
+      <div className="s2" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6, marginBottom: 18 }}>
+        {myCards.map((c, i) => (
+          <div key={c.id} onClick={() => { setActiveCard(c); setFlipped(false); showToast(`${c.tier} — main`); }} style={{
+            width: i === cardIdx ? 20 : 6, height: 6, borderRadius: 50,
+            background: i === cardIdx ? C.yellow : `${C.muted}55`,
+            boxShadow: i === cardIdx ? `0 0 8px ${C.yellow}40` : "none",
+            transition: "all .3s", cursor: "pointer",
+          }} />
+        ))}
+        <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", marginLeft: 6 }}>{activeCard.tier}</span>
+      </div>
+
+      {/* Quick actions - rectangular rounded, same style as Cards screen */}
+      <div className="s3" style={{ padding: "0 20px", marginBottom: 22 }}>
+      <div data-tut="quick-actions" style={{ display: "flex", gap: 8 }}>
+        <button className="outline-btn" onClick={() => onSheet("topup")} style={{
+          flex: 1, padding: "14px 8px", borderRadius: 14,
+          background: "transparent", border: `1px solid ${C.cardBorder}55`,
+          color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer",
+        }}>
+          <Ico d={ic.topup} size={20} color={C.muted} />
+          <span>{t("topUp")}</span>
+        </button>
+        <button className="outline-btn" onClick={() => onSheet("history")} style={{
+          flex: 1, padding: "14px 8px", borderRadius: 14,
+          background: "transparent", border: `1px solid ${C.cardBorder}55`,
+          color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer",
+        }}>
+          <Ico d={ic.history} size={20} color={C.muted} />
+          <span>{t("history")}</span>
+        </button>
+        <button className="outline-btn" onClick={() => onNav("card")} style={{
+          flex: 1, padding: "14px 8px", borderRadius: 14,
+          background: "transparent", border: `1px solid ${C.cardBorder}55`,
+          color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer",
+        }}>
+          <Ico d={ic.card} size={20} color={C.muted} />
+          <span>{t("details")}</span>
+        </button>
+      </div>
+      </div>
+
+      {/* Recent Activity */}
+      <div data-tut="recent-activity" style={{ padding: "0 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <span style={{ color: C.white, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("recentActivity")}</span>
+          <span className="link-glow" onClick={() => onSheet("history")} style={{ color: C.amber, fontSize: 12, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>{t("viewAll")}</span>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {(activeCard.tx || []).slice(0, 4).map((tx, i) => (
+            <Glass key={i} className="glass-btn" onClick={() => setSelectedTx(tx)} style={{
+              padding: "12px 14px", display: "flex", alignItems: "center", cursor: "pointer",
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: `linear-gradient(145deg, ${tx.type === "in" ? C.green : C.accent}15, transparent)`,
+                border: `1px solid ${tx.type === "in" ? C.green : C.accent}18`,
+                display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12, flexShrink: 0,
+              }}>
+                <Ico d={ic[tx.type === "in" ? "topup" : "send"]} size={14} color={tx.type === "in" ? C.green : C.accent2} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: C.silver, fontSize: 13, fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{txName(tx.name)}</div>
+                <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{tx.time}</div>
+              </div>
+              <span style={{
+                color: tx.type === "in" ? C.green : C.silver, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+                textShadow: tx.type === "in" ? `0 0 10px ${C.green}35` : "none", flexShrink: 0, marginLeft: 8,
+              }}>{tx.type === "in" ? "+" : "-"}{tx.amount}</span>
+            </Glass>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: "0 20px" }}>
+        <div data-tut="topup-stable">
+        <Glass glow className="s5 glass-btn" onClick={() => onSheet("topup")} style={{
+          padding: 16, marginTop: 14, display: "flex", alignItems: "center", gap: 14,
+          cursor: "pointer", border: `1px solid ${C.green}25`,
+          background: `linear-gradient(145deg, ${C.green}08, ${C.panel}ee)`,
+        }}>
+          <CircleBtn icon="topup" color={`${C.green}30`} iconColor={C.green} size={42} shadow={false} />
+          <div style={{ flex: 1 }}>
+            <div style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("topUpStable")}</div>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("usdtInstant")}</div>
+          </div>
+          <Ico d={ic.chevron} size={16} color={C.green} />
+        </Glass>
+        </div>
+
+        {/* ─── USEFUL SECTION ─── */}
+        <div data-tut="live-prices" className="s5" style={{ marginTop: 20 }}>
+          <div style={{ color: C.white, fontSize: 16, fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 12 }}>{t("useful")}</div>
+
+          {/* Crypto Rates - LIVE */}
+          <CryptoRates />
+
+          {/* Quick Tiles: Support + FAQ */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <Glass className="glass-btn" onClick={openSupport} style={{
+              flex: 1, padding: "18px 12px", display: "flex", flexDirection: "column",
+              alignItems: "center", gap: 10, cursor: "pointer",
+              border: `1px solid ${C.cardBorder}44`,
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: `${C.hoverAccent}18`, border: `1px solid ${C.hoverAccent}30`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Ico d={ic.headphones} size={20} color={C.hoverAccent} />
+              </div>
+              <span style={{ color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>{t("support")}</span>
+            </Glass>
+
+            <Glass className="glass-btn" onClick={() => onSheet("faq")} style={{
+              flex: 1, padding: "18px 12px", display: "flex", flexDirection: "column",
+              alignItems: "center", gap: 10, cursor: "pointer",
+              border: `1px solid ${C.cardBorder}44`,
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: `${C.amber}18`, border: `1px solid ${C.amber}30`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Ico d={ic.help} size={20} color={C.amber} />
+              </div>
+              <span style={{ color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>{t("faq")}</span>
+            </Glass>
+          </div>
+        </div>
+      </div>
+      {/* Bottom spacer - ensures enough scroll room for tutorial tooltips on bottom elements */}
+      <div style={{ height: 160, flexShrink: 0 }} />
+    </div>
+  );
+};
+
+/* ─── Outlined Rounded Button ─── */
+const OutlineBtn = ({ children, onClick, style: sx = {} }) => (
+  <button className="outline-btn" onClick={onClick} style={{
+    width: "100%", padding: "15px 20px", borderRadius: 16,
+    background: "transparent",
+    border: `1px solid ${C.cardBorder}66`,
+    color: C.silver, fontSize: 14, fontWeight: 500,
+    fontFamily: "DM Sans, sans-serif",
+    display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 8,
+    cursor: "pointer",
+    ...sx,
+  }}>{children}</button>
+);
+
+/* ─── Copy chip - small round copy button ─── */
+const CopyChip = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const doCopy = (e) => {
+    e.stopPropagation();
+    if (navigator.clipboard) navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
+  };
+  return (
+    <div className="copy-chip" onClick={doCopy} style={{
+      width: 26, height: 26, borderRadius: "50%",
+      background: copied ? C.yellow : `${C.accent2}20`,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0, marginLeft: "auto",
+    }}>
+      {copied
+        ? <Ico d={ic.check} size={12} color={C.navy} sw={2.5} />
+        : <Ico d={ic.copy} size={12} color={C.accent2} />
+      }
+    </div>
+  );
+};
+
+/* ─── ALL CARDS SHEET ─── */
+const CARD_TYPES = [
+  { id: 1, tier: "Essential", last4: "4582", balance: "$2,150.00", status: "Active", color: "#6b7280", price: "$25", priceDisc: "$18.75", dailyLimit: "$2,500", monthlyLimit: "$75,000", topupFee: "3.5%", feeNum: 3.5, tx: [
+    { name: "Card Top Up", amount: "$500.00", type: "in", time: "Apr 10, 14:32", st: "settled", usdt: "500.00", net: "Tron (TRC20)", from: "TXqR7kP9mW...k9Fp2", token: "USDT" },
+    { name: "Netflix", amount: "$15.99", type: "out", time: "Apr 10, 09:15", st: "settled", cur: "USD", mc: "$15.99", rate: "1 USDT ≈ $0.99", usdt: "16.15", total: "16.15" },
+    { name: "Amazon", amount: "$67.40", type: "out", time: "Apr 9, 18:22", st: "settled", cur: "USD", mc: "$67.40", rate: "1 USDT ≈ $0.99", usdt: "68.08", total: "68.08" },
+    { name: "Card Top Up", amount: "$200.00", type: "in", time: "Apr 8, 11:05", st: "settled", usdt: "200.00", net: "BNB Smart Chain (BEP20)", from: "0x8a4B7c92...8a9B", token: "USDT" },
+    { name: "Spotify", amount: "$9.99", type: "out", time: "Apr 7, 00:01", st: "settled", cur: "USD", mc: "$9.99", rate: "1 USDT ≈ $0.99", usdt: "10.09", total: "10.09" },
+    { name: "Uber Eats", amount: "$34.80", type: "out", time: "Apr 6, 20:10", st: "settled", cur: "CHF", mc: "CHF 26.10", rate: "1 USDT ≈ CHF 0.75", usdt: "34.80", total: "34.80" },
+  ]},
+  { id: 2, tier: "Plus", last4: "8891", balance: "$430.00", status: "Active", color: "#0ea5e9", price: "$35", priceDisc: "$26.25", dailyLimit: "$5,000", monthlyLimit: "$150,000", topupFee: "3%", feeNum: 3, tx: [
+    { name: "Card Top Up", amount: "$500.00", type: "in", time: "Apr 9, 10:00", st: "settled", usdt: "500.00", net: "Solana", from: "7xKXtQR9...6pVm", token: "USDC" },
+    { name: "Claude.ai", amount: "$21.95", type: "out", time: "Apr 8, 11:24", st: "settled", cur: "USD", mc: "$21.62", rate: "1 USDT ≈ $0.99", usdt: "21.95", total: "21.95" },
+    { name: "OpenAI", amount: "$37.46", type: "out", time: "Apr 7, 09:57", st: "settled", cur: "USD", mc: "$37.46", rate: "1 USDT ≈ $0.99", usdt: "37.84", total: "37.84" },
+    { name: "GitHub", amount: "$10.00", type: "out", time: "Apr 5, 00:01", st: "settled", cur: "USD", mc: "$10.00", rate: "1 USDT ≈ $0.99", usdt: "10.10", total: "10.10" },
+  ]},
+  { id: 3, tier: "Prime", last4: "7203", balance: "$1,870.50", status: "Active", color: C.accent, price: "$75", priceDisc: "$56.25", dailyLimit: "$20,000", monthlyLimit: "$600,000", topupFee: "2.5%", feeNum: 2.5, tx: [
+    { name: "Card Top Up", amount: "$2,000.00", type: "in", time: "Apr 10, 08:00", st: "settled", usdt: "2,000.00", net: "Tron (TRC20)", from: "TXqR7kP9mW...k9Fp2", token: "USDT" },
+    { name: "Apple Store", amount: "$129.00", type: "out", time: "Apr 9, 15:44", st: "settled", cur: "USD", mc: "$129.00", rate: "1 USDT ≈ $0.99", usdt: "130.30", total: "130.30" },
+    { name: "Booking.com", amount: "$340.00", type: "out", time: "Apr 7, 12:30", st: "settled", cur: "EUR", mc: "€312.80", rate: "1 USDT ≈ €0.92", usdt: "340.00", total: "340.00" },
+    { name: "Card Top Up", amount: "$500.00", type: "in", time: "Apr 5, 09:30", st: "settled", usdt: "500.00", net: "BNB Smart Chain (BEP20)", from: "0x8a4B7c92...8a9B", token: "USDC" },
+    { name: "Swiss Airlines", amount: "$289.50", type: "out", time: "Apr 3, 16:20", st: "settled", cur: "CHF", mc: "CHF 217.10", rate: "1 USDT ≈ CHF 0.75", usdt: "289.50", total: "289.50" },
+  ]},
+  { id: 4, tier: "Supreme", last4: "9910", balance: "$12,400.00", status: "Active", color: "#111827", price: "$150", priceDisc: "$112.50", bestValue: true, dailyLimit: "$100,000", monthlyLimit: "$3,000,000", topupFee: "2%", feeNum: 2, tx: [
+    { name: "Card Top Up", amount: "$15,000.00", type: "in", time: "Apr 10, 07:00", st: "settled", usdt: "15,000.00", net: "Tron (TRC20)", from: "TXqR7kP9mW...k9Fp2", token: "USDT" },
+    { name: "Rolex Boutique", amount: "$2,150.00", type: "out", time: "Apr 9, 14:00", st: "settled", cur: "CHF", mc: "CHF 1,890.00", rate: "1 USDT ≈ CHF 0.88", usdt: "2,147.73", total: "2,147.73" },
+    { name: "Four Seasons", amount: "$890.00", type: "out", time: "Apr 8, 19:30", st: "settled", cur: "USD", mc: "$890.00", rate: "1 USDT ≈ $0.99", usdt: "898.99", total: "898.99" },
+    { name: "Louis Vuitton", amount: "$1,560.00", type: "out", time: "Apr 6, 11:15", st: "settled", cur: "EUR", mc: "€1,435.20", rate: "1 USDT ≈ €0.92", usdt: "1,560.00", total: "1,560.00" },
+    { name: "Card Top Up", amount: "$5,000.00", type: "in", time: "Apr 4, 10:00", st: "settled", usdt: "5,000.00", net: "Solana", from: "7xKXtQR9...6pVm", token: "USDT" },
+    { name: "Porsche Center", amount: "$3,200.00", type: "out", time: "Apr 2, 09:45", st: "declined", cur: "CHF", mc: "CHF 2,816.00", rate: "1 USDT ≈ CHF 0.88", usdt: "3,200.00", total: "3,200.00" },
+  ]},
+  { id: 5, tier: "Business", last4: "3301", balance: "$0.00", status: "Active", color: "#1e293b", price: "$150", priceDisc: "$112.50", dailyLimit: "$100,000", monthlyLimit: "$3,000,000", topupFee: "2%", feeNum: 2, googleOnly: true, needsApproval: true, tx: [
+    { name: "Card Top Up", amount: "$10,000.00", type: "in", time: "Apr 10, 06:00", st: "settled", usdt: "10,000.00", net: "BNB Smart Chain (BEP20)", from: "0x8a4B7c92...8a9B", token: "USDT" },
+    { name: "AWS Services", amount: "$2,340.00", type: "out", time: "Apr 9, 00:01", st: "settled", cur: "USD", mc: "$2,340.00", rate: "1 USDT ≈ $0.99", usdt: "2,363.64", total: "2,363.64" },
+    { name: "Google Cloud", amount: "$1,850.00", type: "out", time: "Apr 7, 00:01", st: "settled", cur: "USD", mc: "$1,850.00", rate: "1 USDT ≈ $0.99", usdt: "1,868.69", total: "1,868.69" },
+  ]},
+];
+
+const AllCardsSheet = ({ onClose, onSelectCard, activeId, hidden, lockedCards, myCards, onSheet, cardSkins }) => { const t = useT(); return (
+  <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+    <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+      <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+      <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("allCards")}</span>
+      <div style={{ width: 34 }} />
+    </div>
+    <div style={{ padding: 20 }}>
+      <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginBottom: 12 }}>{t("tapMain")}</div>
+
+      {/* Cards grid 2x2 - only user's owned cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        {myCards.map((card, i) => {
+          const isMain = activeId === card.id;
+          const isLocked = lockedCards && lockedCards.has(card.id);
+          return (
+            <Glass key={card.id} className={`glass-btn s${Math.min(i + 1, 5)}`}
+              onClick={() => { onSelectCard(card); onClose(); }}
+              style={{
+                padding: 14, cursor: "pointer", overflow: "hidden", position: "relative",
+                border: isLocked ? `1.5px solid ${C.error}40` : isMain ? `1.5px solid ${C.yellow}60` : `1px solid ${C.cardBorder}44`,
+                boxShadow: isLocked ? `0 0 18px ${C.error}15, inset 0 0 20px ${C.navy}80` : isMain ? `0 0 16px ${C.yellow}15` : "none",
+              }}>
+              {/* Lock overlay */}
+              {isLocked && (
+                <div style={{
+                  position: "absolute", inset: 0, zIndex: 10,
+                  background: `${C.navy}70`, backdropFilter: "blur(2px)",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+                  borderRadius: "inherit",
+                }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: "50%",
+                    background: `${C.error}15`, border: `1.5px solid ${C.error}30`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <Ico d={ic.lock} size={20} color={C.error} />
+                  </div>
+                  <span style={{ color: C.error, fontSize: 12, fontWeight: 700, fontFamily: "DM Sans, sans-serif", letterSpacing: 1, textTransform: "uppercase" }}>Locked</span>
+                </div>
+              )}
+              {/* Mini card visual with circuit skin or custom */}
+              <div style={{
+                width: "100%", height: 44, borderRadius: 10, marginBottom: 8,
+                background: (CARD_SKINS[card.color] || CARD_SKINS["#111827"]).bg[0],
+                border: `1px solid ${card.color}${isLocked ? "15" : "30"}`,
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "0 10px", position: "relative", overflow: "hidden",
+              }}>
+                {cardSkins && cardSkins[card.id] ? (
+                  <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backgroundImage: `url(${cardSkins[card.id].url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                ) : (
+                  <CircuitBg seed={card.id + 100} color={card.color} />
+                )}
+                <div style={{ position: "absolute", top: 0, left: "-100%", width: "60%", height: "100%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent)", animation: isLocked ? "none" : "card-shine 5s ease infinite", pointerEvents: "none" }} />
+                <span style={{ color: (CARD_SKINS[card.color] || {}).light ? "rgba(40,45,70,.6)" : C.vivid, fontSize: 8, fontFamily: "DM Sans, sans-serif", letterSpacing: 1, textTransform: "uppercase", position: "relative", zIndex: 1, opacity: isLocked ? .4 : 1 }}>SpendX</span>
+                <span style={{ color: C.silver, fontSize: 10, fontFamily: "DM Sans, sans-serif", position: "relative", zIndex: 1, opacity: isLocked ? .4 : 1 }}>** {card.last4}</span>
+              </div>
+              {/* Main badge + Tier */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4, opacity: isLocked ? .4 : 1 }}>
+                <span style={{ color: isMain ? C.yellow : C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", transition: "color .2s" }}>{card.tier}</span>
+                {isMain && (
+                  <span style={{
+                    background: C.yellow, borderRadius: 6, padding: "2px 8px",
+                    fontSize: 8, fontWeight: 700, color: C.navy, fontFamily: "DM Sans, sans-serif",
+                    textTransform: "uppercase", letterSpacing: .5,
+                    boxShadow: `0 0 8px ${C.yellow}40`,
+                  }}>{t("main")}</span>
+                )}
+              </div>
+              {/* Balance */}
+              <div style={{ color: C.white, fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{hidden ? "••••••" : card.balance}</div>
+            </Glass>
+          );
+        })}
+      </div>
+
+      {/* Order new card */}
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+        <button className="outline-btn" onClick={() => { onClose(); onSheet && onSheet("shop"); }} style={{
+          padding: "14px 32px", borderRadius: 50,
+          background: "transparent", border: `1px solid ${C.cardBorder}55`,
+          color: C.silver, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 8, cursor: "pointer",
+        }}>
+          <Ico d={ic.topup} size={18} color={C.muted} /> {t("orderNew")}
+        </button>
+      </div>
+    </div>
+  </div>
+); };
+
+/* ─── CARDS SCREEN ─── */
+/* ─── APPLE PAY GUIDE ─── */
+const ApplePayGuide = () => {
+  const [open, setOpen] = useState(false);
+  const steps = [
+    { num: "1", title: "Open Wallet app", desc: "Open the Wallet app on your iPhone or go to Settings → Wallet & Apple Pay" },
+    { num: "2", title: "Tap the + button", desc: "Tap the \"+\" button in the top-right corner to add a new card" },
+    { num: "3", title: "Choose Debit or Credit Card", desc: "Select \"Debit or Credit Card\" and tap Continue" },
+    { num: "4", title: "Scan or enter card details", desc: "Use camera to scan or manually enter your SpendX card number, expiry date, and CVV" },
+    { num: "5", title: "Verify", desc: "Accept the terms & conditions. Your card will be verified automatically" },
+    { num: "6", title: "Done!", desc: "Your SpendX card is now ready. Use it for contactless payments everywhere Apple Pay is accepted" },
+  ];
+  return (
+    <div>
+      <button className="outline-btn" onClick={() => setOpen(!open)} style={{
+        width: "100%", padding: "15px 20px", borderRadius: 16,
+        background: open ? `${C.yellow}08` : "transparent",
+        border: `1px solid ${open ? C.yellow + "40" : C.cardBorder + "66"}`,
+        color: open ? C.yellow : C.silver, fontSize: 14, fontWeight: open ? 600 : 500,
+        fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 8,
+        cursor: "pointer", transition: "all .3s",
+      }}>
+        <span style={{ fontSize: 16 }}>&#63743;</span>
+        <span>How to Add Card to Apple Pay</span>
+        <span style={{ marginLeft: "auto", transition: "transform .25s", transform: open ? "rotate(90deg)" : "rotate(0deg)" }}>
+          <Ico d={ic.chevron} size={14} color={open ? C.yellow : C.muted} />
+        </span>
+      </button>
+      {open && (
+        <Glass style={{ marginTop: 8, padding: "4px 0", overflow: "hidden", animation: "fade-up .25s ease both" }}>
+          {steps.map((s, i) => (
+            <div key={s.num} className="menu-row" style={{
+              display: "flex", gap: 12, padding: "12px 16px",
+              borderBottom: i < steps.length - 1 ? `1px solid ${C.gridSep}33` : "none",
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+                background: i === steps.length - 1 ? `${C.green}20` : `${C.yellow}12`,
+                border: `1px solid ${i === steps.length - 1 ? C.green + "40" : C.yellow + "25"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: i === steps.length - 1 ? C.green : C.yellow,
+                fontSize: 12, fontWeight: 700, fontFamily: "DM Sans, sans-serif",
+              }}>
+                {i === steps.length - 1 ? <Ico d={ic.check} size={12} color={C.green} sw={2.5} /> : s.num}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: C.white, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{s.title}</div>
+                <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2, lineHeight: 1.4 }}>{s.desc}</div>
+              </div>
+            </div>
+          ))}
+          {/* Also works with Google Pay note */}
+          <div style={{ padding: "10px 16px", background: `${C.accent}08`, display: "flex", alignItems: "center", gap: 8 }}>
+            <Ico d={ic.shield} size={14} color={C.accent2} />
+            <span style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>Also compatible with <span style={{ color: C.silver, fontWeight: 600 }}>Google Pay</span> & <span style={{ color: C.silver, fontWeight: 600 }}>Samsung Pay</span></span>
+          </div>
+        </Glass>
+      )}
+    </div>
+  );
+};
+
+const CardScreen = ({ activeCard, setActiveCard, hidden, setHidden, lockedCards, setLockedCards, showToast, kycStatus, myCards, onSheet, cardSkins, openSkinPicker, lang, setLang, openLangDD }) => {
+  const t = useT();
+  const [flipped, setFlipped] = useState(false);
+  const [showAllCards, setShowAllCards] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showLockConfirm, setShowLockConfirm] = useState(false);
+
+  // Empty state
+  if (!myCards || myCards.length === 0 || !activeCard) return (
+    <div style={{ padding: "70px 20px 20px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+      <div style={{
+        width: 80, height: 80, borderRadius: "50%",
+        background: `${C.yellow}10`, border: `2px dashed ${C.yellow}25`,
+        display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20,
+      }}>
+        <Ico d={ic.card} size={36} color={C.yellow} />
+      </div>
+      <div style={{ color: C.white, fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 8 }}>{ t("noCardsYet") }</div>
+      <div style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif", marginBottom: 24, lineHeight: 1.5, textAlign: "center" }}>
+        {t("noCardsDesc2")}
+      </div>
+      <PillBtn bg={C.yellow} color={C.navy} full onClick={() => onSheet("shop")} style={{ maxWidth: 260 }}>
+        <Ico d={ic.shop} size={16} color={C.navy} sw={2} /> {t("browsePlans")}
+      </PillBtn>
+    </div>
+  );
+
+  const cardLocked = lockedCards.has(activeCard.id);
+  const toggleLock = (lock) => {
+    const next = new Set(lockedCards);
+    lock ? next.add(activeCard.id) : next.delete(activeCard.id);
+    setLockedCards(next);
+    showToast(lock ? `${activeCard.tier} — ${t("cardLocked").toLowerCase()}` : `${activeCard.tier} — unlocked`);
+  };
+
+  if (showAllCards) return (
+    <AllCardsSheet
+      onClose={() => setShowAllCards(false)}
+      onSelectCard={card => { setActiveCard(card); showToast(`${card.tier} — main`); }}
+      activeId={activeCard.id}
+      hidden={hidden}
+      lockedCards={lockedCards}
+      myCards={myCards}
+      onSheet={onSheet}
+      cardSkins={cardSkins}
+    />
+  );
+
+  return (
+    <div style={{ padding: "0 0 20px", overflowX: "hidden" }}>
+      <div style={{ padding: "18px 20px 0" }}>
+        <div className="s1" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ color: C.white, fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("myCard")}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <LangSwitcher lang={lang} setLang={setLang} />
+            <div className="circle-btn" onClick={() => setHidden(!hidden)} style={{
+              width: 40, height: 40, borderRadius: "50%",
+              background: hidden ? `${C.yellow}15` : C.panel,
+              border: `1px solid ${hidden ? C.yellow + "40" : C.cardBorder + "44"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all .25s",
+              boxShadow: hidden ? `0 0 10px ${C.yellow}20` : "none",
+            }}>
+              <Ico d={hidden ? ic.eyeOff : ic.eye} size={18} color={hidden ? C.yellow : C.muted} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Card without toggle - controlled from header */}
+      <div className="s1" style={{ padding: "0 20px", marginBottom: 14 }}>
+        <CreditCard3D
+          flipped={flipped}
+          onFlip={() => setFlipped(!flipped)}
+          compact
+          numberVisible={!hidden}
+          cardData={activeCard}
+          locked={cardLocked}
+          customSkin={cardSkins && cardSkins[activeCard.id]}
+          onChangeSkin={() => openSkinPicker(activeCard)}
+        />
+      </div>
+
+      {/* All Cards + Order New Card buttons */}
+      <div className="s2" style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 20 }}>
+        <button className="pill-btn glass-btn" onClick={() => { setShowAllCards(false); onSheet("shop"); }} style={{
+          padding: "8px 20px", borderRadius: 50,
+          background: C.yellow, border: "none",
+          color: C.navy, fontSize: 12, fontWeight: 700,
+          fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 6,
+          boxShadow: `0 0 16px ${C.yellow}30`,
+        }}><span style={{ fontSize: 15, fontWeight: 800 }}>+</span>{ " " + t("orderNew") }</button>
+        <button className="pill-btn" onClick={() => setShowAllCards(true)} style={{
+          padding: "8px 28px", borderRadius: 50,
+          background: "transparent",
+          border: `1px solid ${C.cardBorder}66`,
+          color: C.muted, fontSize: 13, fontWeight: 500,
+          fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+        }}>{t("allCardsBtn")}</button>
+      </div>
+
+      {/* Card Limits */}
+      <div className="s3" style={{ padding: "0 20px", marginBottom: 14 }}>
+        <Glass style={{ padding: 18 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ color: C.white, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("cardLimits")}</div>
+            <Badge text={activeCard.tier} color={C.amber} />
+          </div>
+          {[
+            { label: t("daily"), val: activeCard.dailyLimit, used: 43, spent: (parseFloat(activeCard.dailyLimit.replace(/[$K,]/g, "")) * 0.43) },
+            { label: t("monthly"), val: activeCard.monthlyLimit, used: 18, spent: (parseFloat(activeCard.monthlyLimit.replace(/[$K,]/g, "")) * 0.18) },
+            { label: t("topupFee"), val: activeCard.topupFee, used: null },
+          ].map(l => (
+            <div key={l.label} className={l.used !== null ? "limit-bar" : ""} style={{ marginBottom: 0, ...(l.used === null ? { padding: "10px 14px", margin: "0 -14px", display: "flex", justifyContent: "space-between" } : {}) }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: l.used !== null ? 4 : 0 }}>
+                <span className="limit-lbl" style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif", transition: "all .2s" }}>{l.label}</span>
+                <span className="limit-val" style={{ color: l.used === null ? C.amber : C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif", transition: "all .2s" }}>{l.val}</span>
+              </div>
+              {l.used !== null && (<>
+                <div className="limit-track" style={{ height: 5, borderRadius: 50, background: C.panelLight, overflow: "hidden", transition: "all .25s" }}>
+                  <div className="limit-fill" style={{
+                    height: "100%", width: `${l.used}%`, borderRadius: 50,
+                    background: `linear-gradient(90deg, ${C.amber}, ${C.green})`,
+                    boxShadow: `0 0 8px ${C.green}30`, transition: "all .25s",
+                  }} />
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                  <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>${l.spent.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t("spent")}</span>
+                  <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{l.used}%</span>
+                </div>
+              </>)}
+            </div>
+          ))}
+        </Glass>
+      </div>
+
+      {/* Lock Card with confirmation */}
+      <div className="s4" style={{ padding: "0 20px", marginBottom: 10 }}>
+        <button className="outline-btn" onClick={() => {
+          if (cardLocked) { toggleLock(false); setShowLockConfirm(false); }
+          else setShowLockConfirm(true);
+        }} style={{
+          width: "100%", padding: "15px 20px", borderRadius: 16,
+          background: cardLocked ? C.yellow : "transparent",
+          border: `1px solid ${cardLocked ? C.yellow : C.cardBorder + "66"}`,
+          color: cardLocked ? C.navy : C.silver, fontSize: 14, fontWeight: cardLocked ? 700 : 500,
+          fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 8,
+          cursor: "pointer", transition: "all .3s",
+          boxShadow: cardLocked ? `0 0 20px ${C.yellow}40` : "none",
+        }}>
+          <Ico d={cardLocked ? ic.lock : ic.unlock} size={16} color={cardLocked ? C.navy : C.muted} />
+          <span>{cardLocked ? t("cardLocked") : t("lockCard")}</span>
+        </button>
+
+        {/* Confirmation dialog */}
+        {showLockConfirm && !cardLocked && (
+          <div style={{
+            marginTop: 8, padding: 16, borderRadius: 16,
+            background: `linear-gradient(145deg, ${C.panel}ee, ${C.panelLight}88)`,
+            border: `1px solid ${C.amber}30`,
+            animation: "fade-up .2s ease both",
+          }}>
+            <div style={{ color: C.white, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>
+              Lock this card?
+            </div>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginBottom: 14 }}>
+              Card will be frozen. No transactions will go through.
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="pill-btn" onClick={() => { toggleLock(true); setShowLockConfirm(false); }} style={{
+                flex: 1, padding: "11px 0", borderRadius: 50,
+                background: `linear-gradient(145deg, ${C.yellow}, ${C.lemon})`,
+                border: "none", color: C.navy, fontSize: 13, fontWeight: 700,
+                fontFamily: "DM Sans, sans-serif", cursor: "pointer", position: "relative",
+                boxShadow: `0 3px 14px ${C.yellow}40`,
+              }}><span style={{ position: "relative", zIndex: 2 }}>{t("yesLock")}</span></button>
+              <button className="outline-btn" onClick={() => setShowLockConfirm(false)} style={{
+                flex: 1, padding: "11px 0", borderRadius: 50,
+                background: "transparent", border: `1px solid ${C.cardBorder}66`,
+                color: C.muted, fontSize: 13, fontWeight: 500,
+                fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+              }}>{t("no")}</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Settings - yellow when open, sub-buttons yellow */}
+      <div className="s4" style={{ padding: "0 20px", marginBottom: 10 }}>
+        <button className="outline-btn" onClick={() => setSettingsOpen(!settingsOpen)} style={{
+          width: "100%", padding: "15px 20px", borderRadius: 16,
+          background: settingsOpen ? C.yellow : "transparent",
+          border: `1px solid ${settingsOpen ? C.yellow : C.cardBorder + "66"}`,
+          color: settingsOpen ? C.navy : C.silver, fontSize: 14, fontWeight: settingsOpen ? 700 : 500,
+          fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 8,
+          cursor: "pointer", transition: "all .3s",
+          boxShadow: settingsOpen ? `0 0 20px ${C.yellow}40` : "none",
+        }}>
+          <Ico d={ic.settings} size={16} color={settingsOpen ? C.navy : C.muted} />
+          <span>{t("settings")}</span>
+          <span style={{ marginLeft: "auto", transition: "transform .25s", transform: settingsOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+            <Ico d={ic.chevron} size={14} color={settingsOpen ? C.navy : C.muted} />
+          </span>
+        </button>
+        {settingsOpen && (
+          <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8, animation: "fade-up .25s ease both" }}>
+            <button className="outline-btn" style={{
+              width: "100%", padding: "14px 20px", borderRadius: 16,
+              background: `${C.yellow}12`, border: `1px solid ${C.yellow}35`,
+              color: C.yellow, fontSize: 13, fontWeight: 600,
+              fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 8,
+              cursor: "pointer",
+            }}>
+              <Ico d={ic.lock} size={15} color={C.yellow} /> Set Pin Code
+            </button>
+            <button className="outline-btn" style={{
+              width: "100%", padding: "14px 20px", borderRadius: 16,
+              background: `${C.yellow}12`, border: `1px solid ${C.yellow}35`,
+              color: C.yellow, fontSize: 13, fontWeight: 600,
+              fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 8,
+              cursor: "pointer",
+            }}>
+              <Ico d={ic.card} size={15} color={C.yellow} /> Replace Card
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Apple Pay - expandable instructions */}
+      <div className="s5" style={{ padding: "0 20px", marginBottom: 16 }}>
+        <ApplePayGuide />
+      </div>
+    </div>
+  );
+};
+
+/* ─── SETTINGS ─── */
+/* ─── PHYSICAL CARD PRE-ORDER SHEET ─── */
+const PhysicalCardSheet = ({ onClose }) => {
+  const t = useT();
+  const [reserved, setReserved] = useState(false);
+  const spotsTotal = 500;
+  const spotsTaken = 347;
+  const spotsLeft = spotsTotal - spotsTaken;
+  const pct = Math.round((spotsTaken / spotsTotal) * 100);
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("physicalCard")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+
+        {/* Card preview */}
+        <div className="s1" style={{ marginBottom: 20 }}>
+          <div style={{
+            width: "100%", height: 180, borderRadius: 20,
+            background: `linear-gradient(135deg, #1a1a2e 0%, ${C.accent}40 50%, #0f0f23 100%)`,
+            border: `1px solid ${C.cardBorder}55`,
+            padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between",
+            position: "relative", overflow: "hidden",
+          }}>
+            <div style={{ position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent)", animation: "card-shine 5s ease infinite", pointerEvents: "none" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div style={{ color: C.vivid, fontSize: 12, fontFamily: "DM Sans, sans-serif", letterSpacing: 3, textTransform: "uppercase" }}>SpendX</div>
+              <Badge text={t("physicalCard")} color={C.amber} />
+            </div>
+            <div>
+              <div style={{ color: C.silver, fontSize: 10, fontFamily: "DM Sans, sans-serif", letterSpacing: 3 }}>••••  ••••  ••••  ••••</div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{t("card").toUpperCase()}</span>
+                <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>••/••</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Waitlist counter */}
+        <Glass className="s2 glow-border-slow" style={{ padding: 18, marginBottom: 16, borderRadius: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+            <span style={{ color: C.white, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("firstWave")}</span>
+            <span style={{ color: C.yellow, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{spotsLeft} {t("left")}</span>
+          </div>
+          <div style={{ height: 8, borderRadius: 50, background: C.panelLight, overflow: "hidden", marginBottom: 8 }}>
+            <div style={{
+              height: "100%", width: `${pct}%`, borderRadius: 50,
+              background: `linear-gradient(90deg, ${C.amber}, ${C.yellow})`,
+              boxShadow: `0 0 10px ${C.yellow}40`,
+              transition: "width 1s ease",
+            }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{spotsTaken} / {spotsTotal} {t("reserved")}</span>
+            <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{pct}%</span>
+          </div>
+        </Glass>
+
+        {/* Features */}
+        <Glass className="s3" style={{ padding: "4px 0", marginBottom: 16, overflow: "hidden" }}>
+          {[
+            { icon: "card", text: t("contactless"), sub: t("worldAccept") },
+            { icon: "topup", text: t("topUp"), sub: t("usdtInstant") },
+            { icon: "shield", text: t("payAppleGoogle"), sub: t("nfcEnabled") },
+            { icon: "send", text: t("freeDelivery"), sub: t("trackedShip") },
+          ].map((f, i) => (
+            <div key={f.text} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < 3 ? `1px solid ${C.gridSep}33` : "none" }}>
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${C.green}15`, border: `1px solid ${C.green}25`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Ico d={ic.check} size={14} color={C.green} sw={2.5} />
+              </div>
+              <div>
+                <div style={{ color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{f.text}</div>
+                <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{f.sub}</div>
+              </div>
+            </div>
+          ))}
+        </Glass>
+
+        {/* Pricing */}
+        <Glass className="s4" style={{ padding: 16, marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <span style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>{t("preOrderPrice")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", textDecoration: "line-through" }}>$58</span>
+              <span style={{ color: C.green, fontSize: 16, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>$30</span>
+            </div>
+          </div>
+          <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", lineHeight: 1.5 }}>
+            {t("preOrderDesc")}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, padding: "8px 10px", borderRadius: 10, background: `${C.yellow}10`, border: `1px solid ${C.yellow}20` }}>
+            <span style={{ fontSize: 13 }}>🎫</span>
+            <span style={{ color: C.yellow, fontSize: 10, fontWeight: 600, fontFamily: "DM Sans, sans-serif", lineHeight: 1.4 }}>{t("voucherInfo")}</span>
+          </div>
+        </Glass>
+
+        {/* CTA */}
+        <div className="s5">
+          {reserved ? (
+            <Glass style={{ padding: 18, textAlign: "center", border: `1px solid ${C.green}30`, background: `${C.green}08` }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>🎉</div>
+              <div style={{ color: C.green, fontSize: 15, fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>{t("onTheList")}</div>
+              <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("position")} #{spotsTaken + 1} / {spotsTotal}</div>
+              <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", marginTop: 8 }}>{t("notifyReady")}</div>
+            </Glass>
+          ) : (
+            <PillBtn bg={C.yellow} color={C.navy} full onClick={() => setReserved(true)}>
+              <Ico d={ic.card} size={16} color={C.navy} sw={2} /> {t("preOrderNow")} - $30
+            </PillBtn>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── SETTINGS SCREEN ─── */
+/* ─── 2FA SETUP SHEET ─── */
+const TwoFASheet = ({ onClose, showToast }) => {
+  const t = useT();
+  const [method, setMethod] = useState(null); // null | "sms" | "google"
+  const [phone, setPhone] = useState("");
+  const [smsCode, setSmsCode] = useState("");
+  const [smsSent, setSmsSent] = useState(false);
+  const [smsVerified, setSmsVerified] = useState(false);
+  const [gaStep, setGaStep] = useState(0); // 0=choose, 1=setup, 2=verify, 3=done
+  const [gaCode, setGaCode] = useState("");
+
+  // Generate a fake TOTP secret
+  const secret = "JBSW Y3DP EHPK 3PXP LQ5A UQKZ";
+
+  const resetAll = () => { setMethod(null); setPhone(""); setSmsCode(""); setSmsSent(false); setSmsVerified(false); setGaStep(0); setGaCode(""); };
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={() => { if (method && !smsVerified && gaStep < 3) { resetAll(); } else onClose(); }} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("twoFASecurity")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+
+        {/* Method selection */}
+        {!method && (
+          <>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: `${C.yellow}12`, border: `1px solid ${C.yellow}25`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <Ico d={ic.shield} size={28} color={C.yellow} />
+              </div>
+              <div style={{ color: C.white, fontSize: 16, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("twoFATitle")}</div>
+              <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 6, lineHeight: 1.5 }}>{t("twoFADesc")}</div>
+            </div>
+
+            {/* SMS Option */}
+            <Glass className="glass-btn" onClick={() => setMethod("sms")} style={{
+              padding: 16, marginBottom: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 14,
+              border: `1px solid ${C.cardBorder}44`,
+            }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: `${C.hoverAccent}15`, border: `1px solid ${C.hoverAccent}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Ico d={ic.phone} size={20} color={C.hoverAccent} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: C.white, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("smsVerification")}</div>
+                <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{t("smsDesc")}</div>
+              </div>
+              <Ico d={ic.chevron} size={14} color={C.muted} />
+            </Glass>
+
+            {/* Google Authenticator Option */}
+            <Glass className="glass-btn" onClick={() => setMethod("google")} style={{
+              padding: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 14,
+              border: `1px solid ${C.cardBorder}44`,
+            }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: `${C.green}15`, border: `1px solid ${C.green}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Ico d={ic.key} size={20} color={C.green} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: C.white, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("googleAuth")}</div>
+                <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>Time-based one-time passwords (TOTP)</div>
+              </div>
+              <Badge text={t("recommended")} color={C.green} />
+              <Ico d={ic.chevron} size={14} color={C.muted} />
+            </Glass>
+          </>
+        )}
+
+        {/* ─── SMS FLOW ─── */}
+        {method === "sms" && !smsVerified && (
+          <>
+            <div style={{ color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif", marginBottom: 16 }}>
+              {smsSent ? "Enter verification code" : "Enter your phone number"}
+            </div>
+
+            {!smsSent ? (
+              <>
+                <Glass style={{ padding: 14, marginBottom: 14 }}>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>Phone number</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: C.navy, borderRadius: 12, padding: "10px 12px", border: `1px solid ${C.cardBorder}44` }}>
+                    <span style={{ color: C.muted, fontSize: 14 }}>📱</span>
+                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+41 79 123 4567"
+                      style={{ flex: 1, background: "none", border: "none", outline: "none", color: C.white, fontSize: 15, fontFamily: "DM Sans, sans-serif", padding: 0 }} />
+                  </div>
+                </Glass>
+                <PillBtn bg={C.yellow} color={C.navy} full onClick={() => { if (phone.length > 6) setSmsSent(true); }}>
+                  Send Code
+                </PillBtn>
+              </>
+            ) : (
+              <>
+                <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginBottom: 14 }}>
+                  We sent a 6-digit code to <span style={{ color: C.silver, fontWeight: 600 }}>{phone}</span>
+                </div>
+                <Glass style={{ padding: 14, marginBottom: 14 }}>
+                  <input type="text" inputMode="numeric" value={smsCode} onChange={e => setSmsCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000"
+                    style={{ background: "none", border: "none", outline: "none", color: C.white, fontSize: 28, fontWeight: 700, fontFamily: "DM Mono, monospace", textAlign: "center", width: "100%", letterSpacing: 10, padding: "8px 0" }} />
+                </Glass>
+                <PillBtn bg={C.yellow} color={C.navy} full onClick={() => { if (smsCode.length === 6) { setSmsVerified(true); showToast("SMS 2FA enabled"); } }}>
+                  <Ico d={ic.check} size={16} color={C.navy} sw={2.5} /> Verify
+                </PillBtn>
+                <div onClick={() => setSmsSent(false)} style={{ textAlign: "center", marginTop: 14, cursor: "pointer" }}>
+                  <span className="link-glow" style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>Resend code or change number</span>
+                </div>
+              </>
+            )}
+          </>
+        )}
+
+        {/* SMS Success */}
+        {method === "sms" && smsVerified && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: `${C.green}15`, border: `1.5px solid ${C.green}40`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Ico d={ic.check} size={32} color={C.green} sw={2.5} />
+            </div>
+            <div style={{ color: C.white, fontSize: 16, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>SMS 2FA Enabled</div>
+            <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 6 }}>Verification codes will be sent to {phone}</div>
+            <div style={{ marginTop: 20 }}>
+              <PillBtn bg={C.yellow} color={C.navy} full onClick={onClose}>
+                Done
+              </PillBtn>
+            </div>
+          </div>
+        )}
+
+        {/* ─── GOOGLE AUTHENTICATOR FLOW ─── */}
+        {method === "google" && gaStep === 0 && (
+          <>
+            <div style={{ color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif", marginBottom: 16 }}>{t("gaSetup")}</div>
+
+            {/* Steps */}
+            {[
+              { n: "1", t: t("installApp"), d: "Download Google Authenticator or any TOTP app from App Store or Google Play" },
+              { n: "2", t: t("scanQR"), d: t("scanDesc") },
+              { n: "3", t: t("enterVerCode"), d: "Type the 6-digit code from your authenticator app to confirm the link" },
+            ].map((s, i) => (
+              <div key={s.n} style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
+                  background: `${C.green}12`, border: `1px solid ${C.green}25`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: C.green, fontSize: 12, fontWeight: 700, fontFamily: "DM Sans, sans-serif",
+                }}>{s.n}</div>
+                <div>
+                  <div style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{s.t}</div>
+                  <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2, lineHeight: 1.4 }}>{s.d}</div>
+                </div>
+              </div>
+            ))}
+
+            <div style={{ marginTop: 8 }}>
+              <PillBtn bg={C.yellow} color={C.navy} full onClick={() => setGaStep(1)}>
+                Continue Setup
+              </PillBtn>
+            </div>
+          </>
+        )}
+
+        {method === "google" && gaStep === 1 && (
+          <>
+            <div style={{ color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif", marginBottom: 16 }}>Scan QR Code</div>
+
+            {/* QR Code */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+              <div style={{
+                width: 180, height: 180, borderRadius: 20,
+                background: "#fff", border: `1px solid ${C.cardBorder}55`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                position: "relative",
+              }}>
+                <svg width={130} height={130} viewBox="0 0 130 130">
+                  <rect x="4" y="4" width="32" height="32" rx="3" fill="none" stroke="#000" strokeWidth="3"/>
+                  <rect x="11" y="11" width="18" height="18" rx="2" fill="#000"/>
+                  <rect x="94" y="4" width="32" height="32" rx="3" fill="none" stroke="#000" strokeWidth="3"/>
+                  <rect x="101" y="11" width="18" height="18" rx="2" fill="#000"/>
+                  <rect x="4" y="94" width="32" height="32" rx="3" fill="none" stroke="#000" strokeWidth="3"/>
+                  <rect x="11" y="101" width="18" height="18" rx="2" fill="#000"/>
+                  {Array.from({length: 10}, (_, r) => Array.from({length: 10}, (_, c) => {
+                    const x = 42 + c * 5; const y = 42 + r * 5;
+                    return Math.random() > 0.4 ? <rect key={`${r}${c}`} x={x} y={y} width="4" height="4" fill="#000"/> : null;
+                  })).flat()}
+                </svg>
+              </div>
+            </div>
+
+            {/* Or enter manually */}
+            <div style={{ textAlign: "center", color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginBottom: 8 }}>{t("orEnterManually")}</div>
+            <Glass style={{ padding: "12px 16px", marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ color: C.yellow, fontSize: 13, fontWeight: 600, fontFamily: "DM Mono, monospace", letterSpacing: 1.5 }}>{secret}</span>
+              <CopyChip text={secret.replace(/\s/g, "")} />
+            </Glass>
+
+            <Glass style={{ padding: "10px 14px", marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 8, border: `1px solid ${C.amber}20`, background: `${C.amber}06` }}>
+              <span style={{ color: C.amber, fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠</span>
+              <span style={{ color: C.muted, fontSize: 11, lineHeight: 1.5, fontFamily: "DM Sans, sans-serif" }}>
+                Save this key in a safe place. If you lose access to your authenticator app, you will need this key to recover your 2FA.
+              </span>
+            </Glass>
+
+            <PillBtn bg={C.yellow} color={C.navy} full onClick={() => setGaStep(2)}>
+              I've Saved the Key - Continue
+            </PillBtn>
+          </>
+        )}
+
+        {method === "google" && gaStep === 2 && (
+          <>
+            <div style={{ color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif", marginBottom: 6 }}>Enter Verification Code</div>
+            <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginBottom: 16 }}>
+              Open your authenticator app and enter the 6-digit code for SpendX
+            </div>
+
+            <Glass style={{ padding: "14px", marginBottom: 14 }}>
+              <input type="text" inputMode="numeric" value={gaCode} onChange={e => setGaCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000"
+                style={{ background: "none", border: "none", outline: "none", color: C.white, fontSize: 28, fontWeight: 700, fontFamily: "DM Mono, monospace", textAlign: "center", width: "100%", letterSpacing: 10, padding: "8px 0" }} />
+            </Glass>
+
+            <PillBtn bg={C.yellow} color={C.navy} full onClick={() => { if (gaCode.length === 6) { setGaStep(3); showToast("Google 2FA enabled"); } }}>
+              <Ico d={ic.check} size={16} color={C.navy} sw={2.5} /> {t("verifyEnable")}
+            </PillBtn>
+          </>
+        )}
+
+        {method === "google" && gaStep === 3 && (
+          <div style={{ textAlign: "center", padding: "20px 0" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: `${C.green}15`, border: `1.5px solid ${C.green}40`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Ico d={ic.check} size={32} color={C.green} sw={2.5} />
+            </div>
+            <div style={{ color: C.white, fontSize: 16, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>Google 2FA Enabled</div>
+            <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 6, lineHeight: 1.5 }}>
+              Your account is now protected with Google Authenticator. You'll need your authenticator app each time you log in.
+            </div>
+            <div style={{ marginTop: 20 }}>
+              <PillBtn bg={C.yellow} color={C.navy} full onClick={onClose}>
+                Done
+              </PillBtn>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+};
+
+const SettingsScreen = ({ lang, setLang, showToast, kycStatus, setKycStatus }) => {
+  const t = useT();
+  const [preorderOpen, setPreorderOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const [notified, setNotified] = useState(new Set());
+  const [confirmNotify, setConfirmNotify] = useState(null);
+  const [twoFAOpen, setTwoFAOpen] = useState(false);
+  const [kycOpen, setKycOpen] = useState(false);
+
+  const LANGUAGES = [
+    { code: "de", name: "Deutsch", flag: "🇩🇪" },
+    { code: "en", name: "English", flag: "🇬🇧" },
+    { code: "es", name: "Español", flag: "🇪🇸" },
+    { code: "ru", name: "Русский", flag: "🇷🇺" },
+    { code: "tr", name: "Türkçe", flag: "🇹🇷" },
+    { code: "uk", name: "Українська", flag: "🇺🇦" },
+  ];
+  const curLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[1];
+
+  if (preorderOpen) return <PhysicalCardSheet onClose={() => setPreorderOpen(false)} />;
+  if (twoFAOpen) return <TwoFASheet onClose={() => setTwoFAOpen(false)} showToast={showToast} />;
+  if (kycOpen) return <KYCSheet onClose={() => setKycOpen(false)} kycStatus={kycStatus} setKycStatus={setKycStatus} showToast={showToast} />;
+
+  return (
+    <div style={{ padding: "0 0 20px", overflowX: "hidden" }}>
+      <div style={{ padding: "48px 20px 20px" }}>
+        {/* Profile */}
+        <div className="s1" style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: "50%",
+            background: `linear-gradient(145deg, ${C.accent}, ${C.navy3})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: C.white, fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif",
+            border: `2px solid ${C.accent}40`,
+          }}>NT</div>
+          <div>
+            <div style={{ color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>Nicolas Tovt</div>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>nicolas@spendx.io</div>
+          </div>
+        </div>
+
+        {/* Physical Card Pre-order - separate prominent block */}
+        <div className="s2" style={{ marginBottom: 18 }}>
+          <Glass className="glass-btn" onClick={() => setPreorderOpen(true)} style={{
+            padding: 0, cursor: "pointer", overflow: "hidden",
+            border: `1px solid ${C.amber}25`,
+            background: `linear-gradient(145deg, ${C.amber}08, ${C.panel}ee)`,
+          }}>
+            <div style={{
+              height: 60, padding: "0 16px",
+              background: `linear-gradient(135deg, #1a1a2e, ${C.accent}30)`,
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ position: "absolute", top: 0, left: "-100%", width: "50%", height: "100%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,.04), transparent)", animation: "card-shine 4s ease infinite", pointerEvents: "none" }} />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative", zIndex: 1 }}>
+                <Ico d={ic.card} size={20} color={C.silver} />
+                <div>
+                  <div style={{ color: C.white, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>Physical Card</div>
+                  <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{t("visaDebit")}</div>
+                </div>
+              </div>
+              <Badge text={t("preOrder")} color={C.yellow} />
+            </div>
+            <div style={{ padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ color: C.amber, fontSize: 12, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("first500")} - 153 {t("spotsLeft")}</div>
+                <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{t("earlyBird")} $30</div>
+              </div>
+              <Ico d={ic.chevron} size={16} color={C.amber} />
+            </div>
+          </Glass>
+        </div>
+
+        {/* Security */}
+        <div className="s3" style={{ marginBottom: 18 }}>
+          <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, paddingLeft: 4 }}>{t("security")}</div>
+          <Glass style={{ overflow: "hidden" }}>
+            {[
+              { icon: "lock", label: t("twoFA"), desc: t("authenticator"), onClick: () => setTwoFAOpen(true) },
+              { icon: "shield", label: t("kycStatus"), desc: kycStatus === "verified" ? t("verified") : kycStatus === "pending" ? "In Review" : "Not Started",
+                badge: kycStatus === "verified" ? t("verified") : kycStatus === "pending" ? "Pending" : "Required",
+                badgeColor: kycStatus === "verified" ? C.green : kycStatus === "pending" ? C.amber : C.error,
+                onClick: () => setKycOpen(true) },
+            ].map((item, i) => (
+              <div key={item.label} className="menu-row" onClick={item.onClick} style={{ display: "flex", alignItems: "center", padding: "13px 16px", borderBottom: i < 1 ? `1px solid ${C.gridSep}44` : "none", cursor: "pointer" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(145deg, ${C.panelLight}, ${C.cardBg}88)`, border: `1px solid ${C.cardBorder}44`, display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                  <Ico d={ic[item.icon]} size={15} color={C.accent2} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: C.silver, fontSize: 13, fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{item.label}</div>
+                  <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{item.desc}</div>
+                </div>
+                {item.badge && <Badge text={item.badge} color={item.badgeColor || C.green} />}
+                <Ico d={ic.chevron} size={14} color={C.muted} />
+              </div>
+            ))}
+          </Glass>
+        </div>
+
+        {/* Language */}
+        <div className="s4" style={{ marginBottom: 18 }}>
+          <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, paddingLeft: 4 }}>{t("language")}</div>
+          <Glass style={{ overflow: "hidden" }}>
+            <div className="menu-row" onClick={() => setLangOpen(!langOpen)} style={{
+              display: "flex", alignItems: "center", padding: "13px 16px", cursor: "pointer",
+              borderBottom: langOpen ? `1px solid ${C.gridSep}44` : "none",
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(145deg, ${C.panelLight}, ${C.cardBg}88)`, border: `1px solid ${C.cardBorder}44`, display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12, fontSize: 18 }}>
+                {curLang.flag}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: C.silver, fontSize: 13, fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{curLang.name}</div>
+              </div>
+              <span style={{ transition: "transform .2s", transform: langOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+                <Ico d={ic.chevron} size={14} color={C.muted} />
+              </span>
+            </div>
+            {langOpen && LANGUAGES.map((l, i) => (
+              <div key={l.code} className="menu-row" onClick={() => { setLang(l.code); setLangOpen(false); showToast(`${l.flag} ${l.name}`); }} style={{
+                display: "flex", alignItems: "center", padding: "12px 16px",
+                borderBottom: i < LANGUAGES.length - 1 ? `1px solid ${C.gridSep}22` : "none",
+                cursor: "pointer",
+                background: lang === l.code ? `${C.yellow}06` : "transparent",
+              }}>
+                <span style={{ fontSize: 20, marginRight: 12, width: 36, textAlign: "center" }}>{l.flag}</span>
+                <span style={{ flex: 1, color: lang === l.code ? C.yellow : C.silver, fontSize: 13, fontWeight: lang === l.code ? 600 : 400, fontFamily: "DM Sans, sans-serif" }}>{l.name}</span>
+                {lang === l.code && <Ico d={ic.check} size={14} color={C.yellow} sw={2.5} />}
+              </div>
+            ))}
+          </Glass>
+        </div>
+
+        {/* Coming Soon */}
+        <div className="s5" style={{ marginBottom: 18 }}>
+          <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 8, paddingLeft: 4 }}>{t("comingSoon")}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[
+              { id: "wallet", icon: "topup", label: t("cryptoWallet"), desc: t("nonCustodial") },
+              { id: "metamask", icon: "send", label: t("metamaskConnect"), desc: t("metamaskDesc") },
+              { id: "yield", icon: "earn", label: t("yield"), desc: t("yieldDesc") },
+              { id: "iban", icon: "iban", label: "vIBAN", desc: t("bankAccount") },
+            ].map((item) => {
+              const isNotified = notified.has(item.id);
+              return (
+                <div key={item.id}>
+                  <Glass className="glass-btn" onClick={() => {
+                    if (!isNotified) setConfirmNotify(item);
+                  }} style={{
+                    padding: "13px 16px", display: "flex", alignItems: "center", cursor: "pointer",
+                    border: isNotified ? `1px solid ${C.green}30` : undefined,
+                  }}>
+                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(145deg, ${C.panelLight}, ${C.cardBg}88)`, border: `1px solid ${C.cardBorder}44`, display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12 }}>
+                      <Ico d={ic[item.icon]} size={15} color={isNotified ? C.green : C.accent2} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: C.silver, fontSize: 13, fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{item.label}</div>
+                      <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{item.desc}</div>
+                    </div>
+                    {isNotified
+                      ? <span style={{ fontSize: 10, fontWeight: 600, color: C.green, fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", gap: 4 }}><Ico d={ic.check} size={10} color={C.green} sw={2.5} /> {t("notified")}</span>
+                      : <Badge text={t("soon")} color={C.cta} />
+                    }
+                  </Glass>
+
+                  {/* Confirmation dialog */}
+                  {confirmNotify && confirmNotify.id === item.id && (
+                    <div style={{
+                      marginTop: 6, padding: 14, borderRadius: 16,
+                      background: `linear-gradient(145deg, ${C.panel}ee, ${C.panelLight}88)`,
+                      border: `1px solid ${C.yellow}20`,
+                    }}>
+                      <div style={{ color: C.silver, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginBottom: 12 }}>
+                        {t("notifyQuestion")}
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => {
+                          const next = new Set(notified); next.add(item.id); setNotified(next);
+                          setConfirmNotify(null);
+                          showToast(`${item.label} — ${t("notified")} ✓`);
+                        }} style={{
+                          flex: 1, padding: "10px 0", borderRadius: 50,
+                          background: `linear-gradient(145deg, ${C.yellow}, ${C.lemon})`,
+                          border: "none", color: C.navy, fontSize: 12, fontWeight: 700,
+                          fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+                          boxShadow: `0 3px 14px ${C.yellow}40`,
+                        }}>{t("yes")}</button>
+                        <button onClick={() => setConfirmNotify(null)} style={{
+                          flex: 1, padding: "10px 0", borderRadius: 50,
+                          background: "transparent", border: `1px solid ${C.cardBorder}66`,
+                          color: C.muted, fontSize: 12, fontWeight: 500,
+                          fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+                        }}>{t("no")}</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── TOP UP SHEET ─── */
+const NETWORKS = [
+  { id: "trc20", name: "Tron (TRC20)", fee: "1.0 USDT", color: "#ff0013", addr: "TXqR7kP9mWz4vN8bL2xFh3jYa5cQ0uDs6K" },
+  { id: "bep20", name: "BNB Smart Chain (BEP20)", fee: "Free", color: "#f3ba2f", addr: "0x8a4B7c92E3f1D5a6b8C0dE9f2A3b4C5d6E7f8a9B" },
+  { id: "sol", name: "Solana", fee: "Free", color: "#14f195", addr: "7xKXtQR9mPv4bN2cL8wFh5jYa3eQ0uDs6pVm" },
+];
+
+const TopUpSheet = ({ onClose, activeCard, onTopUp }) => {
+  const t = useT();
+  const [coin, setCoin] = useState("USDT");
+  const [net, setNet] = useState("trc20");
+  const [netOpen, setNetOpen] = useState(false);
+  const [amt, setAmt] = useState("");
+  const [addrCopied, setAddrCopied] = useState(false);
+  const [amtCopied, setAmtCopied] = useState(false);
+  const [payStatus, setPayStatus] = useState(null); // null | "processing" | "confirmed" | "declined"
+  const selNet = NETWORKS.find(n => n.id === net);
+  const shortAddr = selNet ? selNet.addr.slice(0, 6) + "..." + selNet.addr.slice(-6) : "";
+
+  // Fee calculation
+  const netFee = selNet.fee === "Free" ? 0 : parseFloat(selNet.fee);
+  const cardFee = activeCard.feeNum;
+  const amtNum = parseFloat(amt) || 0;
+  const cardFeeAmt = amtNum * cardFee / 100;
+  const totalToSend = amtNum > 0 ? (amtNum + netFee + cardFeeAmt).toFixed(2) : "";
+  const onCard = amtNum > 0 ? (amtNum).toFixed(2) : "";
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("yourAddress")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+
+        {/* QR Code */}
+        <div className="s1" style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+          <div style={{
+            width: 200, height: 200, borderRadius: 20,
+            background: C.panel, border: `1px solid ${C.cardBorder}55`,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            position: "relative", overflow: "hidden",
+          }}>
+            {/* QR placeholder pattern */}
+            <svg width={140} height={140} viewBox="0 0 140 140" style={{ opacity: .9 }}>
+              {/* Corner squares */}
+              <rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke={C.white} strokeWidth="3"/>
+              <rect x="12" y="12" width="20" height="20" rx="2" fill={C.white}/>
+              <rect x="100" y="4" width="36" height="36" rx="4" fill="none" stroke={C.white} strokeWidth="3"/>
+              <rect x="108" y="12" width="20" height="20" rx="2" fill={C.white}/>
+              <rect x="4" y="100" width="36" height="36" rx="4" fill="none" stroke={C.white} strokeWidth="3"/>
+              <rect x="12" y="108" width="20" height="20" rx="2" fill={C.white}/>
+              {/* Data dots pattern */}
+              {Array.from({length: 8}, (_, r) => Array.from({length: 8}, (_, c) => {
+                const x = 48 + c * 8; const y = 48 + r * 8;
+                return Math.random() > 0.35 ? <rect key={`${r}${c}`} x={x} y={y} width="6" height="6" rx="1" fill={C.white} opacity={Math.random() * 0.5 + 0.5}/> : null;
+              })).flat()}
+              {/* Side dots */}
+              {Array.from({length: 5}, (_, i) => <rect key={`s${i}`} x={48 + i * 10} y={4 + Math.random() * 8} width="6" height="6" rx="1" fill={C.white} opacity={.6}/>)}
+              {Array.from({length: 5}, (_, i) => <rect key={`b${i}`} x={48 + i * 10} y={126 + Math.random() * 8} width="6" height="6" rx="1" fill={C.white} opacity={.6}/>)}
+            </svg>
+          </div>
+        </div>
+
+        {/* Address - tap to copy */}
+        <div className="s1" style={{ textAlign: "center", marginBottom: 20 }}>
+          <div onClick={() => {
+            navigator.clipboard && navigator.clipboard.writeText(selNet.addr);
+            setAddrCopied(true); setTimeout(() => setAddrCopied(false), 2000);
+          }} style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "8px 18px", borderRadius: 50, cursor: "pointer",
+            background: addrCopied ? `${C.yellow}20` : `${C.panel}aa`,
+            border: `1.5px solid ${addrCopied ? C.yellow : C.yellow + "30"}`,
+            boxShadow: addrCopied ? `0 0 24px ${C.yellow}40, 0 0 8px ${C.yellow}25` : "none",
+            transition: "all .3s",
+          }}>
+            {addrCopied
+              ? <><Ico d={ic.check} size={14} color={C.yellow} sw={2.5} /><span style={{ color: C.yellow, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>Copied!</span></>
+              : <><span style={{ color: C.yellow, fontSize: 14, fontWeight: 600, fontFamily: "DM Mono, monospace", letterSpacing: .5 }}>{shortAddr}</span><Ico d={ic.copy} size={14} color={C.yellow} /></>
+            }
+          </div>
+        </div>
+
+        {/* Info panels */}
+        <Glass className="s2" style={{ overflow: "hidden", marginBottom: 10 }}>
+          {/* Receive token */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 16px", borderBottom: `1px solid ${C.gridSep}33` }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("receiveToken")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {["USDT", "USDC"].map(c => (
+                <button key={c} className="outline-btn" onClick={() => setCoin(c)} style={{
+                  padding: "4px 12px", borderRadius: 50,
+                  background: coin === c ? `${C.yellow}15` : "transparent",
+                  border: `1px solid ${coin === c ? C.yellow + "50" : C.cardBorder + "44"}`,
+                  color: coin === c ? C.yellow : C.muted,
+                  fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 4,
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: c === "USDT" ? "#26a17b" : "#2775ca" }} />
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Network dropdown */}
+          <div onClick={() => setNetOpen(!netOpen)} className="menu-row" style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "13px 16px", borderBottom: `1px solid ${C.gridSep}33`, cursor: "pointer",
+          }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("network")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", background: selNet.color, boxShadow: `0 0 4px ${selNet.color}60` }} />
+              <span style={{ color: C.white, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{selNet.name}</span>
+              <span style={{ transition: "transform .2s", transform: netOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+                <Ico d={ic.chevron} size={14} color={C.muted} />
+              </span>
+            </div>
+          </div>
+
+          {/* Dropdown list */}
+          {netOpen && (
+            <div style={{ maxHeight: 240, overflow: "auto", background: C.navy2 }}>
+              {NETWORKS.map((n, i) => (
+                <div key={n.id} className="menu-row" onClick={() => { setNet(n.id); setNetOpen(false); }} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  borderBottom: i < NETWORKS.length - 1 ? `1px solid ${C.gridSep}22` : "none",
+                  cursor: "pointer",
+                  background: net === n.id ? `${C.yellow}06` : "transparent",
+                }}>
+                  <div style={{
+                    width: 10, height: 10, borderRadius: "50%",
+                    background: n.color, boxShadow: `0 0 4px ${n.color}60`,
+                    flexShrink: 0,
+                  }} />
+                  <span style={{
+                    flex: 1, color: net === n.id ? C.yellow : C.silver,
+                    fontSize: 13, fontWeight: net === n.id ? 600 : 400, fontFamily: "DM Sans, sans-serif",
+                  }}>{n.name}</span>
+                  {n.fee !== "Free" && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 600, color: C.yellow, fontFamily: "DM Sans, sans-serif",
+                      background: `${C.yellow}15`, padding: "2px 8px", borderRadius: 6,
+                      border: `1px solid ${C.yellow}30`,
+                    }}>Fee {n.fee === "Free" ? t("free") : n.fee}</span>
+                  )}
+                  {net === n.id && <Ico d={ic.check} size={14} color={C.yellow} sw={2.5} />}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Fee */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 16px", borderBottom: `1px solid ${C.gridSep}33` }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("networkFee")}</span>
+            <span style={{ color: selNet.fee === "Free" ? C.green : C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{selNet.fee === "Free" ? t("free") : selNet.fee}</span>
+          </div>
+
+          {/* Card top-up fee */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 16px", borderBottom: `1px solid ${C.gridSep}33` }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("topupFeeLabel")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Badge text={activeCard.tier} color={C.amber} />
+              <span style={{ color: C.amber, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{activeCard.topupFee}</span>
+            </div>
+          </div>
+
+          {/* Total fee summary */}
+          <div style={{ padding: "13px 16px", borderBottom: `1px solid ${C.gridSep}33`, background: `${C.yellow}06` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>Total fee</span>
+              <span style={{ color: C.yellow, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>
+                {selNet.fee === "Free" ? activeCard.topupFee : `${selNet.fee} + ${activeCard.topupFee}`}
+              </span>
+            </div>
+
+          </div>
+
+          {/* Min amount */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 16px" }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("minAmount")}</span>
+            <span style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>1.00 {coin}</span>
+          </div>
+        </Glass>
+
+        {/* Amount input */}
+        <div className="s3" style={{ marginBottom: 14 }}>
+          <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", color: C.silver, letterSpacing: 0, marginBottom: 8 }}>{t("iWantReceive")}</div>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
+            borderRadius: 16, background: C.panel, border: `1px solid ${amt ? C.yellow + "40" : C.cardBorder + "44"}`,
+            transition: "border-color .2s",
+          }}>
+            <span style={{ color: C.muted, fontSize: 20, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>$</span>
+            <input
+              value={amt}
+              onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, ""); setAmt(v); }}
+              placeholder="0.00"
+              inputMode="decimal"
+              style={{
+                flex: 1, background: "none", border: "none", outline: "none",
+                color: C.white, fontSize: 24, fontWeight: 700, fontFamily: "DM Sans, sans-serif",
+                caretColor: C.yellow, width: "100%",
+              }}
+            />
+            <span style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>USD</span>
+          </div>
+          {/* Presets */}
+          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+            {[50, 100, 250, 500, 1000].map(p => (
+              <button key={p} className="outline-btn" onClick={() => setAmt(String(p))} style={{
+                flex: 1, padding: "6px 0", borderRadius: 10,
+                background: amt === String(p) ? `${C.yellow}15` : "transparent",
+                border: `1px solid ${amt === String(p) ? C.yellow + "50" : C.cardBorder + "44"}`,
+                color: amt === String(p) ? C.yellow : C.muted,
+                fontSize: 11, fontWeight: 600, fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>${p}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Calculated send amount */}
+        {amtNum > 0 && (
+          <Glass className="s3 glow-border-slow" style={{ padding: 16, marginBottom: 14, borderRadius: 18 }}>
+            <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1, marginBottom: 10 }}>Send exactly</div>
+            <div onClick={() => {
+              navigator.clipboard && navigator.clipboard.writeText(totalToSend);
+              setAmtCopied(true); setTimeout(() => setAmtCopied(false), 2000);
+            }} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "8px 12px", margin: "0 -12px", borderRadius: 14, cursor: "pointer",
+              background: amtCopied ? `${C.yellow}18` : "transparent",
+              boxShadow: amtCopied ? `0 0 20px ${C.yellow}25` : "none",
+              transition: "all .3s",
+            }}>
+              <div>
+                {amtCopied
+                  ? <div style={{ color: C.yellow, fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", gap: 8 }}><Ico d={ic.check} size={18} color={C.yellow} sw={2.5} /> Copied!</div>
+                  : <div style={{ color: C.yellow, fontSize: 26, fontWeight: 800, fontFamily: "DM Sans, sans-serif" }}>{totalToSend} <span style={{ fontSize: 14, fontWeight: 500 }}>{coin}</span></div>
+                }
+                <div style={{ color: C.green, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 4 }}>→ ${onCard} on your card</div>
+              </div>
+              {!amtCopied && <Ico d={ic.copy} size={18} color={C.yellow} />}
+            </div>
+            <div style={{ marginTop: 10, padding: "8px 0", borderTop: `1px solid ${C.gridSep}33` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>You want on card</span>
+                <span style={{ color: C.silver, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>${amtNum.toFixed(2)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>Card fee ({activeCard.topupFee})</span>
+                <span style={{ color: C.silver, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>+{cardFeeAmt.toFixed(2)} {coin}</span>
+              </div>
+              {netFee > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                  <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>Network fee</span>
+                  <span style={{ color: C.silver, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>+{netFee.toFixed(1)} {coin}</span>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, paddingTop: 4, borderTop: `1px solid ${C.gridSep}22` }}>
+                <span style={{ color: C.silver, fontSize: 10, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>Total to send</span>
+                <span style={{ color: C.yellow, fontSize: 11, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{totalToSend} {coin}</span>
+              </div>
+            </div>
+          </Glass>
+        )}
+
+        {/* Warning */}
+        <Glass className="s3" style={{ padding: "12px 14px", marginBottom: 10, display: "flex", alignItems: "flex-start", gap: 10, border: `1px solid ${C.amber}20`, background: `${C.amber}06` }}>
+          <span style={{ color: C.amber, fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠</span>
+          <span style={{ color: C.muted, fontSize: 11, lineHeight: 1.5, fontFamily: "DM Sans, sans-serif" }}>
+            {t("warning")} {coin} {t("warningEnd")} <span style={{ color: C.silver, fontWeight: 600 }}>{selNet.name}</span>. {t("warningLoss")}
+          </span>
+        </Glass>
+
+        {/* Platform fee notice */}
+        <Glass className="s3" style={{ padding: "10px 14px", marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 10, border: `1px solid ${C.accent2}15`, background: `${C.accent2}04` }}>
+          <span style={{ color: C.accent2, fontSize: 12, flexShrink: 0 }}>ℹ</span>
+          <span style={{ color: C.muted, fontSize: 10, lineHeight: 1.5, fontFamily: "DM Sans, sans-serif" }}>
+            {t("platformFee")}
+          </span>
+        </Glass>
+
+        {/* Copy + Share */}
+        <div className="s4" style={{ display: "flex", gap: 10 }}>
+          <OutlineBtn onClick={() => navigator.clipboard && navigator.clipboard.writeText(selNet.addr)} style={{ flex: 1, justifyContent: "center", borderRadius: 14, padding: 14 }}>
+            <Ico d={ic.copy} size={16} color={C.muted} /> Copy
+          </OutlineBtn>
+          <PillBtn bg={C.yellow} color={C.navy} full style={{ flex: 1 }}>
+            <Ico d={ic.send} size={16} color={C.navy} sw={2} /> Share
+          </PillBtn>
+        </div>
+
+        {/* I've Paid button */}
+        {amtNum > 0 && (
+          <div className="s5" style={{ marginTop: 14 }}>
+            {payStatus === "processing" ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "16px 0" }}>
+                <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${C.cardBorder}33`, borderTopColor: C.yellow, animation: "spin .8s linear infinite" }} />
+                <span style={{ color: C.yellow, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("processing")}</span>
+              </div>
+            ) : payStatus === "confirmed" ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "16px 0" }}>
+                <Ico d={ic.check} size={18} color={C.green} sw={2.5} />
+                <span style={{ color: C.green, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("topUpConfirmed")}</span>
+              </div>
+            ) : payStatus === "declined" ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "16px 0" }}>
+                <Ico d={ic.eyeOff} size={18} color={C.error} sw={2} />
+                <span style={{ color: C.error, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("topUpDeclined")}</span>
+              </div>
+            ) : (
+              <PillBtn bg={C.green} color={C.navy} full onClick={() => {
+                setPayStatus("processing");
+                const isSuccess = Math.random() > 0.15; // 85% success for demo
+                setTimeout(() => {
+                  if (isSuccess) {
+                    setPayStatus("confirmed");
+                    if (onTopUp) onTopUp(amtNum, coin, selNet.name, selNet.addr, totalToSend);
+                  } else {
+                    setPayStatus("declined");
+                    if (onTopUp) onTopUp(0, coin, selNet.name, selNet.addr, totalToSend, true);
+                  }
+                  setTimeout(() => onClose(), 1800);
+                }, 2000);
+              }} style={{ padding: "16px 0", fontSize: 15 }}>
+                <Ico d={ic.check} size={18} color={C.navy} sw={2.5} /> {t("sentPayment")}
+              </PillBtn>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ─── HISTORY SHEET ─── */
+/* ─── TRANSACTION DETAIL SHEET ─── */
+const TxDetailSheet = ({ tx, cardInfo, onClose }) => {
+  const t = useT();
+  const isIn = tx.type === "in";
+  const isDeclined = tx.st === "declined";
+  const amtColor = isDeclined ? C.error : isIn ? C.green : C.white;
+  const letter = tx.name.charAt(0);
+  const iconBg = isIn ? C.green : isDeclined ? C.error : C.amber;
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1 }} />
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: "10px 20px" }}>
+
+        {/* Hero */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 24 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%", marginBottom: 14,
+            background: isIn ? `${C.green}25` : `${iconBg}20`,
+            border: `2px solid ${isIn ? C.green : iconBg}40`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 0 20px ${isIn ? C.green : iconBg}20`,
+          }}>
+            {isIn ? (
+              <Ico d={ic.topup} size={28} color={C.green} />
+            ) : (
+              <span style={{ color: iconBg, fontSize: 24, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{letter}</span>
+            )}
+          </div>
+          <div style={{ color: amtColor, fontSize: 30, fontWeight: 800, fontFamily: "DM Sans, sans-serif", marginBottom: 4 }}>
+            {isIn ? "+" : "-"}{tx.usdt || tx.amount.replace("$", "")} <span style={{ fontSize: 16, fontWeight: 500 }}>USDT</span>
+          </div>
+          <div style={{ color: C.silver, fontSize: 14, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>
+            {isIn ? t("cryptoTopUp") : `${t("paymentTo")} ${tx.name}`}
+          </div>
+          <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 4 }}>{tx.time}</div>
+        </div>
+
+        {/* Status + Card/Address */}
+        <Glass style={{ padding: "0 16px", marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: `1px solid ${C.gridSep}33` }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("status")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ color: isDeclined ? C.error : C.green, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>
+                {isDeclined ? t("declined") : t("settled")}
+              </span>
+              <Ico d={isDeclined ? ic.eyeOff : ic.check} size={14} color={isDeclined ? C.error : C.green} sw={2.5} />
+            </div>
+          </div>
+          {isDeclined && tx.st === "declined" && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: `1px solid ${C.gridSep}33` }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("reason")}</span>
+              <span style={{ color: C.error, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>Declined</span>
+            </div>
+          )}
+          {isIn && tx.from && (
+            <div style={{ padding: "13px 0", borderBottom: `1px solid ${C.gridSep}33` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("fromAddr")}</span>
+              </div>
+              <div style={{ color: C.silver, fontSize: 11, fontFamily: "DM Sans, sans-serif", wordBreak: "break-all" }}>{tx.from}</div>
+            </div>
+          )}
+          {isIn && tx.net && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0" }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("tokenNet")}</span>
+              <span style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{tx.token}, {tx.net}</span>
+            </div>
+          )}
+          {!isIn && cardInfo && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0" }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("card")}</span>
+              <span style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>Visa ••{cardInfo.last4}</span>
+            </div>
+          )}
+        </Glass>
+
+        {/* Amount details */}
+        {!isIn && tx.mc && (
+          <Glass style={{ padding: "0 16px", marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: `1px solid ${C.gridSep}33` }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("merchantCharge")}</span>
+              <span style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{tx.mc}</span>
+            </div>
+            {tx.rate && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: `1px solid ${C.gridSep}33` }}>
+                <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("exchangeRate")}</span>
+                <span style={{ color: C.silver, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>{tx.rate}</span>
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0", borderBottom: `1px solid ${C.gridSep}33` }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("exchangedAmt")}</span>
+              <span style={{ color: C.silver, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{tx.usdt} USDT</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0" }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("totalCharge")}</span>
+              <span style={{ color: C.white, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{tx.total} USDT</span>
+            </div>
+          </Glass>
+        )}
+
+        {isIn && tx.usdt && (
+          <Glass style={{ padding: "0 16px", marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0" }}>
+              <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("amount")}</span>
+              <span style={{ color: C.white, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{tx.usdt} {tx.token || "USDT"}</span>
+            </div>
+          </Glass>
+        )}
+
+        {/* Action links */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+          {isIn && (
+            <Glass className="menu-row" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", border: `1px solid ${C.cardBorder}55` }}>
+              <span style={{ color: C.yellow, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("cryptoDetails")}</span>
+              <Ico d={ic.send} size={14} color={C.yellow} />
+            </Glass>
+          )}
+          <Glass className="menu-row" style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", border: `1px solid ${C.cardBorder}55` }}>
+            <span style={{ color: C.yellow, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("termsFees")}</span>
+            <Ico d={ic.help} size={14} color={C.yellow} />
+          </Glass>
+          <Glass className="menu-row" onClick={openSupport} style={{ padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", border: `1px solid ${C.cardBorder}55` }}>
+            <span style={{ color: C.yellow, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("contactSupport")}</span>
+            <Ico d={ic.headphones} size={14} color={C.yellow} />
+          </Glass>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const HistorySheet = ({ onClose, activeCard, myCards }) => {
+  const t = useT();
+  const cards = myCards || [activeCard];
+  const [filter, setFilter] = useState(activeCard.id);
+  const [dropOpen, setDropOpen] = useState(false);
+  const [selectedTx, setSelectedTx] = useState(null);
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const allTx = cards.flatMap(c => (c.tx || []).map(t => ({ ...t, tier: c.tier, last4: c.last4, color: c.color, cardId: c.id })))
+    .sort((a, b) => {
+      const da = new Date("2026-" + a.time.replace("Apr ", "04-").replace(", ", "T")); 
+      const db = new Date("2026-" + b.time.replace("Apr ", "04-").replace(", ", "T"));
+      return db - da;
+    });
+
+  const currentCard = filter === "all" ? null : cards.find(c => c.id === filter);
+  const txList = filter === "all" ? allTx : (currentCard ? (currentCard.tx || []).map(t => ({ ...t, tier: currentCard.tier, last4: currentCard.last4, color: currentCard.color, cardId: currentCard.id })) : []);
+
+  if (selectedTx) {
+    const ci = cards.find(c => c.id === (selectedTx.cardId || activeCard.id)) || activeCard;
+    return <TxDetailSheet tx={selectedTx} cardInfo={ci} onClose={() => setSelectedTx(null)} />;
+  }
+  const headerLabel = filter === "all" ? t("allCards") : (currentCard ? `${currentCard.tier} ** ${currentCard.last4}` : "");
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("txHistory")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: "10px 20px" }}>
+
+        {/* Card selector dropdown */}
+        <div style={{ marginBottom: 14 }}>
+          <div className="outline-btn" onClick={() => setDropOpen(!dropOpen)} style={{
+            width: "100%", padding: "11px 16px", borderRadius: 14,
+            background: C.panel, border: `1px solid ${C.cardBorder}55`,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            cursor: "pointer",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {filter !== "all" && currentCard && <div style={{ width: 8, height: 8, borderRadius: "50%", background: currentCard.color, boxShadow: `0 0 4px ${currentCard.color}60` }} />}
+              {filter === "all" && <Ico d={ic.card} size={14} color={C.amber} />}
+              <span style={{ color: C.white, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{headerLabel}</span>
+            </div>
+            <span style={{ transition: "transform .2s", transform: dropOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+              <Ico d={ic.chevron} size={14} color={C.muted} />
+            </span>
+          </div>
+
+          {dropOpen && (
+            <Glass style={{ marginTop: 6, overflow: "hidden", animation: "fade-up .2s ease both" }}>
+              {/* All Cards option */}
+              <div className="menu-row" onClick={() => { setFilter("all"); setDropOpen(false); }} style={{
+                display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
+                borderBottom: `1px solid ${C.gridSep}33`, cursor: "pointer",
+                background: filter === "all" ? `${C.yellow}08` : "transparent",
+              }}>
+                <Ico d={ic.card} size={14} color={C.amber} />
+                <span style={{ flex: 1, color: filter === "all" ? C.yellow : C.silver, fontSize: 13, fontWeight: filter === "all" ? 600 : 400, fontFamily: "DM Sans, sans-serif" }}>{t("allCards")}</span>
+                {filter === "all" && <Ico d={ic.check} size={14} color={C.yellow} sw={2.5} />}
+              </div>
+              {/* Individual cards */}
+              {cards.map((c, i) => (
+                <div key={c.id} className="menu-row" onClick={() => { setFilter(c.id); setDropOpen(false); }} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
+                  borderBottom: i < cards.length - 1 ? `1px solid ${C.gridSep}22` : "none",
+                  cursor: "pointer",
+                  background: filter === c.id ? `${C.yellow}08` : "transparent",
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: c.color, boxShadow: `0 0 4px ${c.color}60`, flexShrink: 0 }} />
+                  <span style={{ flex: 1, color: filter === c.id ? C.yellow : C.silver, fontSize: 13, fontWeight: filter === c.id ? 600 : 400, fontFamily: "DM Sans, sans-serif" }}>{c.tier} ** {c.last4}</span>
+                  <span style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{c.balance}</span>
+                  {filter === c.id && <Ico d={ic.check} size={14} color={C.yellow} sw={2.5} />}
+                </div>
+              ))}
+            </Glass>
+          )}
+        </div>
+
+        {/* Search */}
+        <div style={{ marginBottom: 12 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 10, padding: "10px 14px",
+            borderRadius: 14, background: C.panel, border: `1px solid ${search ? C.yellow + "40" : C.cardBorder + "44"}`,
+            transition: "border-color .2s",
+          }}>
+            <Ico d={ic.search} size={16} color={search ? C.yellow : C.muted} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search transactions..."
+              style={{
+                flex: 1, background: "none", border: "none", outline: "none",
+                color: C.white, fontSize: 13, fontFamily: "DM Sans, sans-serif",
+                caretColor: C.yellow,
+              }}
+            />
+            {search && (
+              <div onClick={() => setSearch("")} style={{ cursor: "pointer", padding: 2 }}>
+                <Ico d={ic.eyeOff} size={12} color={C.muted} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Transactions */}
+        {(() => {
+          const q = search.toLowerCase().trim();
+          const filtered = q ? txList.filter(tx => {
+            const name = tx.name.toLowerCase();
+            const amt = tx.amount.replace(/[$,]/g, "");
+            const qClean = q.replace(/[$,]/g, "");
+            return name.includes(q) || amt.includes(qClean) || (tx.tier && tx.tier.toLowerCase().includes(q));
+          }) : txList;
+
+          // Group by date
+          const dayLabels = { "Apr 10": "Today", "Apr 9": "Yesterday" };
+          const groups = {};
+          filtered.forEach(tx => {
+            const day = tx.time.split(",")[0].trim();
+            if (!groups[day]) groups[day] = [];
+            groups[day].push(tx);
+          });
+          const dayOrder = Object.keys(groups).sort((a, b) => parseInt(b.split(" ")[1]) - parseInt(a.split(" ")[1]));
+
+          return (<>
+        {q && <div style={{ marginBottom: 8 }}><span style={{ color: C.yellow, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{filtered.length} found</span></div>}
+        {filtered.length === 0 ? (
+          <Glass style={{ padding: "24px 14px", textAlign: "center" }}>
+            <Ico d={ic.search} size={24} color={C.muted} />
+            <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 8 }}>No transactions found</div>
+          </Glass>
+        ) : dayOrder.map(day => (
+          <div key={day} style={{ marginBottom: 14 }}>
+            <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, display: "flex", justifyContent: "space-between" }}>
+              <span>{dayLabels[day] || day}</span>
+              <span style={{ color: C.muted, fontSize: 10 }}>{groups[day].length}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {groups[day].map((tx, i) => (
+                <div key={i} className="row-h" onClick={() => setSelectedTx(tx)} style={{
+                  display: "flex", alignItems: "center", padding: "12px 14px",
+                  borderRadius: 16, background: `${C.panel}99`,
+                  border: `1px solid ${C.cardBorder}33`,
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: "50%",
+                    background: `linear-gradient(145deg, ${tx.st === "declined" ? C.error : tx.type === "in" ? C.green : C.accent2}15, ${C.panel})`,
+                    border: `1px solid ${tx.st === "declined" ? C.error : tx.type === "in" ? C.green : C.accent2}22`,
+                    display: "flex", alignItems: "center", justifyContent: "center", marginRight: 12, flexShrink: 0,
+                  }}>
+                    <Ico d={ic[tx.type === "in" ? "topup" : "send"]} size={14} color={tx.st === "declined" ? C.error : tx.type === "in" ? C.green : C.accent2} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: C.silver, fontSize: 13, fontWeight: 500, fontFamily: "DM Sans, sans-serif" }}>{tx.name === "Card Top Up" ? t("cardTopUp") : tx.name}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                      <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{tx.time.split(", ")[1]}</span>
+                      <span style={{
+                        fontSize: 8, fontWeight: 600, color: C.muted, fontFamily: "DM Sans, sans-serif",
+                        background: `${tx.color || C.panel}20`, padding: "1px 6px", borderRadius: 4,
+                        border: `1px solid ${tx.color || C.cardBorder}30`,
+                      }}>{tx.tier} {tx.last4}</span>
+                    </div>
+                  </div>
+                  <span style={{
+                    color: tx.st === "declined" ? C.error : tx.type === "in" ? C.green : C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif",
+                    textShadow: tx.type === "in" && tx.st !== "declined" ? `0 0 10px ${C.green}35` : "none",
+                    flexShrink: 0, marginLeft: 8,
+                  }}>{tx.type === "in" ? "+" : "-"}{tx.amount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        </>); })()}
+      </div>
+    </div>
+  );
+};
+
+/* ─── APP ─── */
+/* ─── CARD SHOP ─── */
+const CardShopSheet = ({ onClose, orderCard, ownedCards, kycStatus, setKycStatus, showToast }) => {
+  const t = useT();
+  const [confirmCard, setConfirmCard] = useState(null);
+  const [payingCard, setPayingCard] = useState(null); // card being paid for
+  const [payNet, setPayNet] = useState("bep20");
+  const [payCoin, setPayCoin] = useState("USDT");
+  const [payAddrCopied, setPayAddrCopied] = useState(false);
+  const [payAmtCopied, setPayAmtCopied] = useState(false);
+  const [ordered, setOrdered] = useState(null);
+  const [kycOpen, setKycOpen] = useState(false);
+
+  // KYC sub-sheet inside Card Shop
+  if (kycOpen) return <KYCSheet onClose={() => setKycOpen(false)} kycStatus={kycStatus} setKycStatus={setKycStatus} showToast={showToast} />;
+
+  const PAY_NETS = [
+    { id: "trc20", name: "Tron (TRC20)", fee: "1.0 USDT", color: "#ff0013", addr: "TXqR7kP9mWz4vN8bL2xFh3jYa5cQ0uDs6K" },
+    { id: "bep20", name: "BNB Smart Chain (BEP20)", fee: "Free", color: "#f3ba2f", addr: "0x8a4B7c92E3f1D5a6b8C0dE9f2A3b4C5d6E7f8a9B" },
+    { id: "sol", name: "Solana", fee: "Free", color: "#14f195", addr: "7xKXtQR9mPv4bN2cL8wFh5jYa3eQ0uDs6pVm" },
+  ];
+  const selPayNet = PAY_NETS.find(n => n.id === payNet);
+
+  // Step 3: Success
+  if (ordered) return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 30 }}>
+      <div style={{ width: 72, height: 72, borderRadius: "50%", background: `${C.green}15`, border: `2px solid ${C.green}40`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20, animation: "float 2s ease-in-out infinite" }}>
+        <Ico d={ic.check} size={36} color={C.green} sw={2.5} />
+      </div>
+      <div style={{ color: C.white, fontSize: 20, fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 6 }}>{ordered.tier} {t("cardOrdered")}</div>
+      <div style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif", textAlign: "center", marginBottom: 24 }}>{t("virtualBeingIssued")}</div>
+      <PillBtn bg={C.yellow} color={C.navy} full onClick={onClose}>
+        {t("goToMyCards")}
+      </PillBtn>
+    </div>
+  );
+
+  // Step 2: Crypto payment
+  if (payingCard) {
+    const shortPayAddr = selPayNet ? selPayNet.addr.slice(0, 6) + "..." + selPayNet.addr.slice(-6) : "";
+    const payAmount = payingCard.priceDisc;
+
+    return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={() => setPayingCard(null)} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("payForCard")} {payingCard.tier}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+        {/* Amount */}
+        <Glass style={{ padding: 16, marginBottom: 14, textAlign: "center", borderRadius: 20, border: `1px solid ${C.yellow}25` }}>
+          <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{t("issuanceFeeLabel")}</div>
+          <div style={{ color: C.white, fontSize: 32, fontWeight: 800, fontFamily: "DM Sans, sans-serif" }}>{payAmount}</div>
+          <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 4 }}>
+            <span style={{ textDecoration: "line-through" }}>{payingCard.price}</span>
+            <span style={{ color: C.green, marginLeft: 6 }}>{t("off15")}</span>
+          </div>
+        </Glass>
+
+        {/* QR Code */}
+        <div className="s1" style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+          <div style={{
+            width: 180, height: 180, borderRadius: 20,
+            background: C.panel, border: `1px solid ${C.cardBorder}55`,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            position: "relative", overflow: "hidden",
+          }}>
+            <svg width={130} height={130} viewBox="0 0 140 140" style={{ opacity: .9 }}>
+              <rect x="4" y="4" width="36" height="36" rx="4" fill="none" stroke={C.white} strokeWidth="3"/>
+              <rect x="12" y="12" width="20" height="20" rx="2" fill={C.white}/>
+              <rect x="100" y="4" width="36" height="36" rx="4" fill="none" stroke={C.white} strokeWidth="3"/>
+              <rect x="108" y="12" width="20" height="20" rx="2" fill={C.white}/>
+              <rect x="4" y="100" width="36" height="36" rx="4" fill="none" stroke={C.white} strokeWidth="3"/>
+              <rect x="12" y="108" width="20" height="20" rx="2" fill={C.white}/>
+              {Array.from({length: 8}, (_, r) => Array.from({length: 8}, (_, c) => {
+                const x = 48 + c * 8; const y = 48 + r * 8;
+                return ((r + c) % 3 !== 0) ? <rect key={`${r}${c}`} x={x} y={y} width="6" height="6" rx="1" fill={C.white} opacity={0.5 + ((r * c) % 5) * 0.1}/> : null;
+              })).flat()}
+              {Array.from({length: 5}, (_, i) => <rect key={`s${i}`} x={48 + i * 10} y={8} width="6" height="6" rx="1" fill={C.white} opacity={.6}/>)}
+              {Array.from({length: 5}, (_, i) => <rect key={`b${i}`} x={48 + i * 10} y={128} width="6" height="6" rx="1" fill={C.white} opacity={.6}/>)}
+            </svg>
+          </div>
+        </div>
+
+        {/* Address - tap to copy */}
+        <div className="s1" style={{ textAlign: "center", marginBottom: 16 }}>
+          <div onClick={() => {
+            navigator.clipboard && navigator.clipboard.writeText(selPayNet.addr);
+            setPayAddrCopied(true); setTimeout(() => setPayAddrCopied(false), 2000);
+          }} style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            padding: "8px 18px", borderRadius: 50, cursor: "pointer",
+            background: payAddrCopied ? `${C.yellow}20` : `${C.panel}aa`,
+            border: `1.5px solid ${payAddrCopied ? C.yellow : C.yellow + "30"}`,
+            boxShadow: payAddrCopied ? `0 0 24px ${C.yellow}40, 0 0 8px ${C.yellow}25` : "none",
+            transition: "all .3s",
+          }}>
+            {payAddrCopied
+              ? <><Ico d={ic.check} size={14} color={C.yellow} sw={2.5} /><span style={{ color: C.yellow, fontSize: 13, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("addrCopied")}</span></>
+              : <><span style={{ color: C.yellow, fontSize: 14, fontWeight: 600, fontFamily: "DM Mono, monospace", letterSpacing: .5 }}>{shortPayAddr}</span><Ico d={ic.copy} size={14} color={C.yellow} /></>
+            }
+          </div>
+        </div>
+
+        {/* Info panel */}
+        <Glass className="s2" style={{ overflow: "hidden", marginBottom: 10 }}>
+          {/* Token selector */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 16px", borderBottom: `1px solid ${C.gridSep}33` }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("payWithToken")}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {["USDT", "USDC"].map(c => (
+                <button key={c} className="outline-btn" onClick={() => setPayCoin(c)} style={{
+                  padding: "4px 12px", borderRadius: 50,
+                  background: payCoin === c ? `${C.yellow}15` : "transparent",
+                  border: `1px solid ${payCoin === c ? C.yellow + "50" : C.cardBorder + "44"}`,
+                  color: payCoin === c ? C.yellow : C.muted,
+                  fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 4,
+                }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: c === "USDT" ? "#26a17b" : "#2775ca" }} />
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Network selector */}
+          <div style={{ borderBottom: `1px solid ${C.gridSep}33` }}>
+            <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1, padding: "10px 16px 4px" }}>{t("network")}</div>
+            {PAY_NETS.map((n, i) => (
+              <div key={n.id} className="menu-row" onClick={() => setPayNet(n.id)} style={{
+                display: "flex", alignItems: "center", gap: 12, padding: "10px 16px",
+                borderBottom: i < PAY_NETS.length - 1 ? `1px solid ${C.gridSep}22` : "none", cursor: "pointer",
+                background: payNet === n.id ? `${C.yellow}06` : "transparent",
+              }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: n.color, boxShadow: `0 0 4px ${n.color}60`, flexShrink: 0 }} />
+                <span style={{ flex: 1, color: payNet === n.id ? C.yellow : C.silver, fontSize: 13, fontWeight: payNet === n.id ? 600 : 400, fontFamily: "DM Sans, sans-serif" }}>{n.name}</span>
+                {n.fee !== "Free" && <span style={{ fontSize: 10, color: C.yellow, fontFamily: "DM Sans, sans-serif", background: `${C.yellow}15`, padding: "2px 8px", borderRadius: 6, border: `1px solid ${C.yellow}30` }}>Fee {n.fee}</span>}
+                {payNet === n.id && <Ico d={ic.check} size={14} color={C.yellow} sw={2.5} />}
+              </div>
+            ))}
+          </div>
+
+          {/* Amount to send */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 16px" }}>
+            <span style={{ color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("sendExactly")}</span>
+            <div onClick={() => {
+              const raw = payAmount.replace("$", "");
+              navigator.clipboard && navigator.clipboard.writeText(raw);
+              setPayAmtCopied(true); setTimeout(() => setPayAmtCopied(false), 2000);
+            }} style={{
+              display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+              padding: "4px 10px", borderRadius: 8,
+              background: payAmtCopied ? `${C.yellow}15` : "transparent",
+              border: `1px solid ${payAmtCopied ? C.yellow + "40" : "transparent"}`,
+              transition: "all .2s",
+            }}>
+              <span style={{ color: C.white, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{payAmount} {payCoin}</span>
+              {payAmtCopied
+                ? <Ico d={ic.check} size={12} color={C.yellow} sw={2.5} />
+                : <Ico d={ic.copy} size={12} color={C.muted} />
+              }
+            </div>
+          </div>
+        </Glass>
+
+        {/* Warning */}
+        <Glass className="s3" style={{ padding: "10px 14px", marginBottom: 18, display: "flex", alignItems: "flex-start", gap: 8, border: `1px solid ${C.amber}20`, background: `${C.amber}06` }}>
+          <span style={{ color: C.amber, fontSize: 14, flexShrink: 0 }}>⚠</span>
+          <span style={{ color: C.muted, fontSize: 11, lineHeight: 1.5, fontFamily: "DM Sans, sans-serif" }}>
+            {t("sendOnly")} <span style={{ color: C.silver, fontWeight: 600 }}>{payCoin}</span> {t("onNetwork")} <span style={{ color: C.silver, fontWeight: 600 }}>{selPayNet.name}</span>. {t("sendWarning")}
+          </span>
+        </Glass>
+
+        {/* Confirm payment */}
+        <PillBtn bg={C.yellow} color={C.navy} full onClick={() => {
+          const ok = orderCard(payingCard.id);
+          if (ok) { setOrdered(payingCard); setPayingCard(null); }
+        }}>
+          <Ico d={ic.check} size={16} color={C.navy} sw={2.5} /> {t("sentPayment")}
+        </PillBtn>
+      </div>
+    </div>
+  );
+  }
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("chooseCard")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+
+        {/* KYC Warning */}
+        {kycStatus !== "verified" && (
+          <Glass className="glass-btn" onClick={() => setKycOpen(true)} style={{
+            padding: "14px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+            border: `2px solid ${C.yellow}`, background: `${C.yellow}08`,
+            boxShadow: `0 0 20px ${C.yellow}35, 0 0 6px ${C.yellow}20`,
+          }}>
+            <div style={{ width: 40, height: 40, borderRadius: "50%", background: `${C.error}25`, border: `1.5px solid ${C.error}50`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 0 12px ${C.error}30` }}>
+              <Ico d={ic.shield} size={18} color={C.error} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ color: C.yellow, fontSize: 14, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{ t("kycRequired") }</div>
+              <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{ t("kycRequiredDesc") }</div>
+            </div>
+            <Ico d={ic.chevron} size={14} color={C.yellow} />
+          </Glass>
+        )}
+
+        {/* First card discount banner */}
+        {ownedCards.length === 0 && (
+          <div onClick={() => {
+            const el = document.getElementById('card-Supreme');
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }} style={{
+            padding: "14px 18px", marginBottom: 16, textAlign: "center", cursor: "pointer",
+            background: C.yellow, borderRadius: 16,
+          }}>
+            <div style={{ color: C.navy, fontSize: 15, fontWeight: 800, fontFamily: "DM Sans, sans-serif", marginBottom: 2 }}>
+              {t("firstCardLine1")}
+            </div>
+            <div style={{ color: C.navy, fontSize: 12, fontWeight: 500, fontFamily: "DM Sans, sans-serif", opacity: 0.7 }}>
+              {t("firstCardLine2")}
+            </div>
+          </div>
+        )}
+
+        {/* Card tiers */}
+        {CARD_TYPES.map((card, i) => {
+          const ownedCount = ownedCards.filter(c => c.tier === card.tier).length;
+          const isFirstCard = ownedCards.length === 0;
+          const displayPrice = isFirstCard ? card.priceDisc : card.price;
+          const isBestValue = card.bestValue;
+          return (
+            <div id={`card-${card.tier}`}>
+            <Glass key={card.id} className={`s${Math.min(i + 1, 5)}`} style={{
+              padding: 0, marginBottom: 14, overflow: "hidden",
+              border: isBestValue ? `2px solid ${C.yellow}60` : `1px solid ${C.cardBorder}44`,
+              boxShadow: isBestValue ? `0 0 20px ${C.yellow}15` : "none",
+            }}>
+              {/* Best Value badge */}
+              {isBestValue && (
+                <div style={{
+                  background: `linear-gradient(90deg, ${C.yellow}, ${C.yellow}cc)`, padding: "5px 0",
+                  textAlign: "center",
+                }}>
+                  <span style={{ color: C.navy, fontSize: 10, fontWeight: 800, fontFamily: "DM Sans, sans-serif", letterSpacing: 2, textTransform: "uppercase" }}>{t("bestValue")}</span>
+                </div>
+              )}
+              {/* Card visual with native image */}
+              <div style={{
+                height: 80, padding: "16px 18px",
+                backgroundImage: `url(${NATIVE_CARD_IMG[card.color] || ""})`,
+                backgroundSize: "cover", backgroundPosition: "center",
+                backgroundColor: (CARD_SKINS[card.color] || CARD_SKINS["#111827"]).bg[0],
+                display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+                position: "relative", overflow: "hidden",
+              }}>
+                <div style={{ position: "absolute", top: 0, left: "-100%", width: "60%", height: "100%", background: "linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent)", animation: "card-shine 5s ease infinite", pointerEvents: "none" }} />
+                {/* Bottom gradient for text readability */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "70%", background: "linear-gradient(to top, rgba(0,0,0,.5) 0%, rgba(0,0,0,.15) 60%, transparent 100%)", pointerEvents: "none", zIndex: 1 }} />
+                <div style={{ position: "relative", zIndex: 2 }}>
+                  <div style={{ color: "rgba(255,255,255,.6)", fontSize: 9, fontFamily: "DM Sans, sans-serif", letterSpacing: 2, textTransform: "uppercase", textShadow: "0 1px 3px rgba(0,0,0,.5)" }}>SpendX</div>
+                  <div style={{ color: C.white, fontSize: 22, fontWeight: 800, fontFamily: "DM Sans, sans-serif", textShadow: "0 1px 4px rgba(0,0,0,.5)" }}>{card.tier}</div>
+                </div>
+                <div style={{ position: "relative", zIndex: 2, textAlign: "right" }}>
+                  {isFirstCard ? (
+                    <>
+                      <div style={{ color: "rgba(255,255,255,.7)", fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif", textDecoration: "line-through", textShadow: "0 1px 3px rgba(0,0,0,.6)" }}>{card.price}</div>
+                      <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif", textShadow: `0 0 8px ${C.yellow}80, 0 0 20px ${C.yellow}40, 0 2px 4px rgba(0,0,0,.4)` }}>{card.priceDisc}</div>
+                      <div style={{ color: "rgba(255,255,255,.5)", fontSize: 8, fontFamily: "DM Sans, sans-serif", textShadow: "0 1px 2px rgba(0,0,0,.5)" }}>{t("issuanceFee")}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ color: "#fff", fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif", textShadow: `0 0 8px ${C.yellow}80, 0 0 20px ${C.yellow}40, 0 2px 4px rgba(0,0,0,.4)` }}>{card.price}</div>
+                      <div style={{ color: "rgba(255,255,255,.5)", fontSize: 8, fontFamily: "DM Sans, sans-serif", textShadow: "0 1px 2px rgba(0,0,0,.5)" }}>{t("issuanceFee")}</div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Details */}
+              <div style={{ padding: "12px 18px" }}>
+                {[
+                  { l: t("dailyLimit"), v: card.dailyLimit },
+                  { l: t("monthlyLimit"), v: card.monthlyLimit },
+                  { l: t("topupFeeShop"), v: card.topupFee },
+                ].map(r => (
+                  <div key={r.l} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0" }}>
+                    <span style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>{r.l}</span>
+                    <span style={{ color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{r.v}</span>
+                  </div>
+                ))}
+
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.gridSep}33` }}>
+                  <Ico d={ic.check} size={12} color={C.green} sw={2.5} />
+                  <span style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{card.googleOnly ? t("googlePayOnly") : t("payAppleGoogle")}</span>
+                </div>
+
+                {/* Validity period */}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
+                  <Ico d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z M12 6v6l4 2" size={11} color={C.muted} sw={1.5} />
+                  <span style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif" }}>{t("validity")}: {(card.bestValue || card.needsApproval) ? t("years3") : t("years2")}</span>
+                </div>
+
+                {/* Voucher for Supreme & Business */}
+                {(card.bestValue || card.needsApproval) && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "6px 10px", borderRadius: 8, background: `${C.yellow}10`, border: `1px solid ${C.yellow}20` }}>
+                    <span style={{ fontSize: 11 }}>🎫</span>
+                    <span style={{ color: C.yellow, fontSize: 10, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("includesVoucher")}</span>
+                  </div>
+                )}
+
+                {/* Business approval note */}
+                {card.needsApproval && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 6, padding: "6px 10px", borderRadius: 8, background: `${C.amber}10`, border: `1px solid ${C.amber}25` }}>
+                    <Ico d={ic.shield} size={12} color={C.amber} />
+                    <span style={{ color: C.amber, fontSize: 10, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("businessApproval")}</span>
+                  </div>
+                )}
+
+                {/* Owned count indicator */}
+                {ownedCount > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "6px 0 2px" }}>
+                    <Ico d={ic.check} size={12} color={C.green} sw={2.5} />
+                    <span style={{ color: C.green, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("ownedLabel")} x{ownedCount}</span>
+                  </div>
+                )}
+
+                {/* Action button - always available */}
+                <div style={{ marginTop: 8 }}>
+                  {kycStatus !== "verified" ? (
+                    <PillBtn bg={C.yellow} color={C.navy} full onClick={() => setKycOpen(true)} style={{ padding: "12px 0", fontSize: 13, border: `2px solid ${C.yellow}`, boxShadow: `0 0 16px ${C.yellow}50, 0 0 4px ${C.yellow}30` }}>
+                      <Ico d={ic.lock} size={14} color={C.error} sw={2} /> {t("completeKyc")}
+                    </PillBtn>
+                  ) : (
+                    <PillBtn bg={C.accent2} color={C.white} full onClick={() => setConfirmCard(card)} style={{ padding: "12px 0", fontSize: 13 }}>
+                      {t("orderCardBtn")} - {isFirstCard ? card.priceDisc : card.price}
+                    </PillBtn>
+                  )}
+                </div>
+              </div>
+            </Glass>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Confirm dialog */}
+      {confirmCard && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.7)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 30 }} onClick={() => setConfirmCard(null)}>
+          <Glass onClick={e => e.stopPropagation()} style={{ padding: 24, maxWidth: 320, width: "100%", borderRadius: 24, border: `1px solid ${C.yellow}30`, animation: "fade-up .25s ease both" }}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ color: C.white, fontSize: 18, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{t("orderConfirmTitle")} {confirmCard.tier}?</div>
+              <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 6 }}>{t("issuanceFeeColon")} <span style={{ color: C.green, fontWeight: 700 }}>{confirmCard.priceDisc}</span></div>
+            </div>
+            {[
+              { l: t("dailyLimit"), v: confirmCard.dailyLimit },
+              { l: t("monthlyLimit"), v: confirmCard.monthlyLimit },
+              { l: t("topupFeeShop"), v: confirmCard.topupFee },
+            ].map(r => (
+              <div key={r.l} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0" }}>
+                <span style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>{r.l}</span>
+                <span style={{ color: C.silver, fontSize: 12, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{r.v}</span>
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button className="outline-btn" onClick={() => setConfirmCard(null)} style={{ flex: 1, padding: "12px 0", borderRadius: 50, background: "transparent", border: `1px solid ${C.cardBorder}66`, color: C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif", cursor: "pointer" }}>{t("cancel")}</button>
+              <PillBtn bg={C.yellow} color={C.navy} full onClick={() => {
+                setPayingCard(confirmCard);
+                setConfirmCard(null);
+              }} style={{ flex: 1 }}>{t("payWithCrypto")}</PillBtn>
+            </div>
+          </Glass>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── SUPPORT LINK ─── */
+const SUPPORT_LINK = "https://t.me/+NeGKJ0bQ5Gk2NDE0";
+const openSupport = () => {
+  try {
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      window.Telegram.WebApp.openTelegramLink(SUPPORT_LINK);
+    } else {
+      window.open(SUPPORT_LINK, "_blank");
+    }
+  } catch (e) { window.open(SUPPORT_LINK, "_blank"); }
+};
+
+/* ─── FAQ SHEET ─── */
+const FAQ_DATA = {
+  en: [
+    { q: "What is SpendX?", a: "SpendX LLC is a fintech company at the intersection of crypto infrastructure, stablecoin settlements, and digital payments. The company issues crypto-linked payment cards (virtual and physical) and builds an integrated ecosystem connecting digital assets, banking instruments, and Web3. Incorporated in Dubai, UAE. License No. 2528382.01." },
+    { q: "What card types and plans are available?", a: "SpendX offers both physical and virtual cards across five plans: Essential ($25), Plus ($35), Prime ($75), Supreme ($150), and Business ($150). Each tier has its own daily and monthly spending limits and top-up fee." },
+    { q: "Where can I use my SpendX Card?", a: "Anywhere Mastercard or Visa is accepted - online and in-store, at 100M+ merchants worldwide." },
+    { q: "How do I top up my SpendX Card?", a: "Send USDT or USDC directly to your personal deposit address. Supported networks: Tron (TRC20), BNB Smart Chain (BEP20), and Solana. Funds convert to USD and land on your card balance." },
+    { q: "How do I activate my SpendX Card?", a: "Your card is activated automatically after completing KYC verification and purchasing the card. No manual steps required." },
+    { q: "Can I spend in different currencies?", a: "The SpendX Card is issued in USD, but you can pay in any currency worldwide. Exchange rates are determined by the banks involved in the transaction." },
+    { q: "Do I need to complete KYC?", a: "Yes - SpendX is fully KYC-compliant. You need a valid ID card, passport, or residence permit. It is a one-time process required before card issuance." },
+    { q: "How long does KYC verification take?", a: "Most verifications complete quickly. If selected for manual review it may take up to 72 hours. Your virtual card is issued immediately after approval." },
+    { q: "How to stay safe online?", a: "Many similarly named websites exist. Use only our official site: spend-x.com. All official social media accounts carry verification badges." },
+    { q: "What does it cost to top up my card?", a: "Top-up fees range from 2.0% to 3.5% depending on your plan. Always shown before confirming - no hidden charges." },
+    { q: "Are there hidden fees when spending?", a: "Many services charge up to 8.33% hidden fees at purchase. SpendX charges only the stated top-up fee - your full balance is always usable." },
+  ],
+  ru: [
+    { q: "Что такое SpendX?", a: "SpendX LLC - финтех-компания на стыке крипто-инфраструктуры, расчётов стейблкоинами и цифровых платежей. Компания выпускает крипто-привязанные платёжные карты (виртуальные и физические) и строит экосистему, объединяющую цифровые активы, банковские инструменты и Web3. Зарегистрирована в Дубае, ОАЭ. Лицензия No. 2528382.01." },
+    { q: "Какие типы карт и тарифы доступны?", a: "SpendX предлагает физические и виртуальные карты пяти уровней: Essential ($25), Plus ($35), Prime ($75), Supreme ($150) и Business ($150). Каждый уровень имеет свои дневные и месячные лимиты трат и комиссию пополнения." },
+    { q: "Где можно использовать карту SpendX?", a: "Везде, где принимают Mastercard или Visa - онлайн и в магазинах, в более чем 100 млн торговых точках по всему миру." },
+    { q: "Как пополнить карту SpendX?", a: "Отправьте USDT или USDC на ваш персональный адрес для пополнения. Поддерживаемые сети: Tron (TRC20), BNB Smart Chain (BEP20) и Solana. Средства конвертируются в USD и зачисляются на баланс карты." },
+    { q: "Как активировать карту SpendX?", a: "Карта активируется автоматически после прохождения KYC-верификации и покупки карты. Никаких ручных действий не требуется." },
+    { q: "Можно ли платить в разных валютах?", a: "Карта SpendX выпущена в USD, но вы можете оплачивать покупки в любой валюте мира. Курсы обмена определяются банками, участвующими в транзакции." },
+    { q: "Нужно ли проходить KYC?", a: "Да - SpendX полностью соответствует требованиям KYC. Вам нужен действующий паспорт, ID-карта или вид на жительство. Это одноразовая процедура, необходимая для выпуска карты." },
+    { q: "Сколько занимает KYC-верификация?", a: "Большинство верификаций проходят быстро. При ручной проверке это может занять до 72 часов. Виртуальная карта выпускается сразу после одобрения." },
+    { q: "Как обезопасить себя онлайн?", a: "Существует множество сайтов с похожими названиями. Используйте только наш официальный сайт: spend-x.com. Все официальные аккаунты в соцсетях имеют верификационные значки." },
+    { q: "Сколько стоит пополнение карты?", a: "Комиссия пополнения составляет от 2.0% до 3.5% в зависимости от тарифа. Всегда отображается перед подтверждением - никаких скрытых платежей." },
+    { q: "Есть ли скрытые комиссии при оплате?", a: "Многие сервисы взимают до 8.33% скрытых комиссий при покупке. SpendX берёт только указанную комиссию пополнения - весь ваш баланс всегда доступен для использования." },
+  ],
+  uk: [
+    { q: "Що таке SpendX?", a: "SpendX LLC - фінтех-компанія на перетині крипто-інфраструктури, розрахунків стейблкоїнами та цифрових платежів. Компанія випускає крипто-прив'язані платіжні картки (віртуальні та фізичні) та будує екосистему, що об'єднує цифрові активи, банківські інструменти та Web3. Зареєстрована в Дубаї, ОАЕ. Ліцензія No. 2528382.01." },
+    { q: "Які типи карток і тарифи доступні?", a: "SpendX пропонує фізичні та віртуальні картки п'яти рівнів: Essential ($25), Plus ($35), Prime ($75), Supreme ($150) та Business ($150). Кожен рівень має свої денні та місячні ліміти витрат і комісію поповнення." },
+    { q: "Де можна використовувати картку SpendX?", a: "Скрізь, де приймають Mastercard або Visa - онлайн та у магазинах, у понад 100 млн торгових точках по всьому світу." },
+    { q: "Як поповнити картку SpendX?", a: "Надішліть USDT або USDC на вашу персональну адресу для поповнення. Підтримувані мережі: Tron (TRC20), BNB Smart Chain (BEP20) та Solana. Кошти конвертуються в USD та зараховуються на баланс картки." },
+    { q: "Як активувати картку SpendX?", a: "Картка активується автоматично після проходження KYC-верифікації та купівлі картки. Жодних ручних дій не потрібно." },
+    { q: "Чи можна платити в різних валютах?", a: "Картка SpendX випущена в USD, але ви можете оплачувати покупки в будь-якій валюті світу. Курси обміну визначаються банками, що беруть участь у транзакції." },
+    { q: "Чи потрібно проходити KYC?", a: "Так - SpendX повністю відповідає вимогам KYC. Вам потрібен дійсний паспорт, ID-картка або посвідка на проживання. Це одноразова процедура, необхідна для випуску картки." },
+    { q: "Скільки займає KYC-верифікація?", a: "Більшість верифікацій проходять швидко. При ручній перевірці це може зайняти до 72 годин. Віртуальна картка випускається одразу після схвалення." },
+    { q: "Як убезпечити себе онлайн?", a: "Існує безліч сайтів з подібними назвами. Використовуйте лише наш офіційний сайт: spend-x.com. Усі офіційні акаунти в соцмережах мають верифікаційні значки." },
+    { q: "Скільки коштує поповнення картки?", a: "Комісія поповнення складає від 2.0% до 3.5% залежно від тарифу. Завжди відображається перед підтвердженням - жодних прихованих платежів." },
+    { q: "Чи є приховані комісії при оплаті?", a: "Багато сервісів стягують до 8.33% прихованих комісій при покупці. SpendX бере лише зазначену комісію поповнення - весь ваш баланс завжди доступний для використання." },
+  ],
+  de: [
+    { q: "Was ist SpendX?", a: "SpendX LLC ist ein Fintech-Unternehmen an der Schnittstelle von Krypto-Infrastruktur, Stablecoin-Abwicklung und digitalen Zahlungen. Das Unternehmen gibt kryptogebundene Zahlungskarten (virtuell und physisch) aus und baut ein Ökosystem, das digitale Assets, Bankinstrumente und Web3 verbindet. Registriert in Dubai, VAE. Lizenz Nr. 2528382.01." },
+    { q: "Welche Kartentypen und Tarife gibt es?", a: "SpendX bietet physische und virtuelle Karten in fünf Stufen: Essential ($25), Plus ($35), Prime ($75), Supreme ($150) und Business ($150). Jede Stufe hat eigene tägliche und monatliche Ausgabelimits und Aufladegebühren." },
+    { q: "Wo kann ich meine SpendX-Karte nutzen?", a: "Überall, wo Mastercard oder Visa akzeptiert wird - online und im Geschäft, bei über 100 Mio. Händlern weltweit." },
+    { q: "Wie lade ich meine SpendX-Karte auf?", a: "Senden Sie USDT oder USDC an Ihre persönliche Einzahlungsadresse. Unterstützte Netzwerke: Tron (TRC20), BNB Smart Chain (BEP20) und Solana. Die Mittel werden in USD umgewandelt und auf Ihr Kartenguthaben gebucht." },
+    { q: "Wie aktiviere ich meine SpendX-Karte?", a: "Ihre Karte wird automatisch nach Abschluss der KYC-Verifizierung und dem Kauf aktiviert. Keine manuellen Schritte erforderlich." },
+    { q: "Kann ich in verschiedenen Währungen bezahlen?", a: "Die SpendX-Karte wird in USD ausgestellt, Sie können aber in jeder Währung weltweit bezahlen. Die Wechselkurse werden von den an der Transaktion beteiligten Banken bestimmt." },
+    { q: "Muss ich KYC durchführen?", a: "Ja - SpendX ist vollständig KYC-konform. Sie benötigen einen gültigen Personalausweis, Reisepass oder Aufenthaltstitel. Es ist ein einmaliger Vorgang vor der Kartenausgabe." },
+    { q: "Wie lange dauert die KYC-Verifizierung?", a: "Die meisten Verifizierungen sind schnell abgeschlossen. Bei manueller Prüfung kann es bis zu 72 Stunden dauern. Ihre virtuelle Karte wird sofort nach der Genehmigung ausgestellt." },
+    { q: "Wie schütze ich mich online?", a: "Es gibt viele Websites mit ähnlichen Namen. Nutzen Sie nur unsere offizielle Seite: spend-x.com. Alle offiziellen Social-Media-Konten tragen Verifizierungsabzeichen." },
+    { q: "Was kostet das Aufladen meiner Karte?", a: "Die Aufladegebühren liegen je nach Tarif zwischen 2,0% und 3,5%. Werden immer vor der Bestätigung angezeigt - keine versteckten Kosten." },
+    { q: "Gibt es versteckte Gebühren beim Bezahlen?", a: "Viele Dienste erheben bis zu 8,33% versteckte Gebühren beim Kauf. SpendX berechnet nur die angegebene Aufladegebühr - Ihr gesamtes Guthaben ist immer nutzbar." },
+  ],
+  es: [
+    { q: "Que es SpendX?", a: "SpendX LLC es una empresa fintech en la interseccion de la infraestructura cripto, liquidaciones con stablecoins y pagos digitales. La empresa emite tarjetas de pago vinculadas a criptomonedas (virtuales y fisicas) y construye un ecosistema que conecta activos digitales, instrumentos bancarios y Web3. Registrada en Dubai, EAU. Licencia No. 2528382.01." },
+    { q: "Que tipos de tarjetas y planes hay?", a: "SpendX ofrece tarjetas fisicas y virtuales en cinco niveles: Essential ($25), Plus ($35), Prime ($75), Supreme ($150) y Business ($150). Cada nivel tiene sus propios limites de gasto diarios y mensuales y comision de recarga." },
+    { q: "Donde puedo usar mi tarjeta SpendX?", a: "Donde acepten Mastercard o Visa - en linea y en tiendas, en mas de 100 millones de comercios en todo el mundo." },
+    { q: "Como recargo mi tarjeta SpendX?", a: "Envie USDT o USDC a su direccion personal de deposito. Redes compatibles: Tron (TRC20), BNB Smart Chain (BEP20) y Solana. Los fondos se convierten a USD y se acreditan en el saldo de su tarjeta." },
+    { q: "Como activo mi tarjeta SpendX?", a: "Su tarjeta se activa automaticamente despues de completar la verificacion KYC y comprar la tarjeta. No se requieren pasos manuales." },
+    { q: "Puedo pagar en diferentes monedas?", a: "La tarjeta SpendX se emite en USD, pero puede pagar en cualquier moneda del mundo. Los tipos de cambio son determinados por los bancos involucrados en la transaccion." },
+    { q: "Necesito completar KYC?", a: "Si - SpendX cumple completamente con KYC. Necesita un documento de identidad, pasaporte o permiso de residencia valido. Es un proceso unico requerido antes de la emision de la tarjeta." },
+    { q: "Cuanto tarda la verificacion KYC?", a: "La mayoria de las verificaciones se completan rapidamente. Si se selecciona para revision manual, puede tardar hasta 72 horas. Su tarjeta virtual se emite inmediatamente despues de la aprobacion." },
+    { q: "Como mantenerse seguro en linea?", a: "Existen muchos sitios web con nombres similares. Use solo nuestro sitio oficial: spend-x.com. Todas las cuentas oficiales en redes sociales llevan insignias de verificacion." },
+    { q: "Cuanto cuesta recargar mi tarjeta?", a: "Las comisiones de recarga van del 2.0% al 3.5% segun su plan. Siempre se muestran antes de confirmar - sin cargos ocultos." },
+    { q: "Hay comisiones ocultas al pagar?", a: "Muchos servicios cobran hasta un 8.33% de comisiones ocultas en la compra. SpendX cobra solo la comision de recarga indicada - todo su saldo esta siempre disponible." },
+  ],
+  tr: [
+    { q: "SpendX nedir?", a: "SpendX LLC, kripto altyapisi, stablecoin odemeleri ve dijital odemelerin kesisiminde bir fintek sirketidir. Sirket, kripto bagrantili odeme kartlari (sanal ve fiziksel) cikarir ve dijital varliklari, bankacilik araclarini ve Web3'u birlestiren entegre bir ekosistem olusturur. Dubai, BAE'de kayitli. Lisans No. 2528382.01." },
+    { q: "Hangi kart turleri ve planlar mevcut?", a: "SpendX, bes planda fiziksel ve sanal kartlar sunar: Essential ($25), Plus ($35), Prime ($75), Supreme ($150) ve Business ($150). Her seviyenin kendi gunluk ve aylik harcama limitleri ve yukleme ucreti vardir." },
+    { q: "SpendX Kartimi nerede kullanabilirim?", a: "Mastercard veya Visa'nin kabul edildigi her yerde - cevrimici ve magaza ici, dunya genelinde 100 milyondan fazla is yerinde." },
+    { q: "SpendX Kartimi nasil yuklerim?", a: "Kisisel yatirma adresinize USDT veya USDC gonderin. Desteklenen aglar: Tron (TRC20), BNB Smart Chain (BEP20) ve Solana. Fonlar USD'ye donusturulur ve kart bakiyenize yansir." },
+    { q: "SpendX Kartimi nasil aktif ederim?", a: "Kartiniz, KYC dogrulamasini tamamladiktan ve karti satin aldiktan sonra otomatik olarak aktif edilir. Manuel adim gerekmez." },
+    { q: "Farkli para birimlerinde harcama yapabilir miyim?", a: "SpendX Kart USD olarak cikarilir, ancak dunya genelinde herhangi bir para biriminde odeme yapabilirsiniz. Doviz kurlari islemde yer alan bankalar tarafindan belirlenir." },
+    { q: "KYC'yi tamamlamam gerekiyor mu?", a: "Evet - SpendX tamamen KYC uyumludur. Gecerli bir kimlik karti, pasaport veya oturma izni gereklidir. Kart duzenlenmeden once gerekli olan tek seferlik bir islemdir." },
+    { q: "KYC dogrulamasi ne kadar surer?", a: "Cogu dogrulama hizla tamamlanir. Manuel inceleme icin secilirse 72 saate kadar surebilir. Sanal kartiniz onaydan hemen sonra duzenlenir." },
+    { q: "Cevrimici guvenlik nasil saglanir?", a: "Benzer adlara sahip bircok web sitesi bulunmaktadir. Yalnizca resmi sitemizi kullanin: spend-x.com. Tum resmi sosyal medya hesaplari dogrulama rozetleri tasir." },
+    { q: "Kartimi yuklemek ne kadara mal olur?", a: "Yukleme ucretleri planiniza bagli olarak %2,0 ile %3,5 arasinda degisir. Onaylamadan once her zaman gosterilir - gizli ucret yoktur." },
+    { q: "Harcama yaparken gizli ucretler var mi?", a: "Bircok hizmet, satin almada %8,33'e kadar gizli ucret alir. SpendX yalnizca belirtilen yukleme ucretini alir - tam bakiyeniz her zaman kullanilabilir." },
+  ],
+};
+
+const FAQ_TITLE = { en: "Frequently Asked Questions", ru: "Часто задаваемые вопросы", uk: "Поширені запитання", de: "Häufig gestellte Fragen", es: "Preguntas frecuentes", tr: "Sik sorulan sorular" };
+
+const FAQSheet = ({ onClose }) => {
+  const t = useT();
+  const lang = useContext(LangCtx);
+  const faqItems = FAQ_DATA[lang] || FAQ_DATA.en;
+  const [openIdx, setOpenIdx] = useState(null);
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("faq")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `${C.amber}15`, border: `1px solid ${C.amber}25`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+            <Ico d={ic.help} size={24} color={C.amber} />
+          </div>
+          <div style={{ color: C.white, fontSize: 16, fontWeight: 700, fontFamily: "DM Sans, sans-serif" }}>{FAQ_TITLE[lang] || FAQ_TITLE.en}</div>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {faqItems.map((item, i) => {
+            const isOpen = openIdx === i;
+            return (
+              <Glass key={i} className="glass-btn" onClick={() => setOpenIdx(isOpen ? null : i)} style={{
+                padding: 0, cursor: "pointer", overflow: "hidden",
+                border: `1px solid ${isOpen ? C.hoverAccent + "30" : C.cardBorder + "44"}`,
+                background: isOpen ? `${C.hoverAccent}06` : undefined,
+              }}>
+                <div style={{
+                  padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                }}>
+                  <span style={{
+                    color: isOpen ? C.hoverAccent : C.silver, fontSize: 13, fontWeight: 600,
+                    fontFamily: "DM Sans, sans-serif", flex: 1, transition: "color .2s",
+                  }}>{item.q}</span>
+                  <span style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                    background: isOpen ? `${C.green}20` : `${C.cardBorder}30`,
+                    border: `1px solid ${isOpen ? C.green + "40" : C.cardBorder + "44"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: isOpen ? C.green : C.muted, fontSize: 14, fontWeight: 700,
+                    transition: "all .25s", transform: isOpen ? "rotate(45deg)" : "none",
+                  }}>+</span>
+                </div>
+                {isOpen && (
+                  <div style={{
+                    padding: "0 16px 14px", animation: "fade-up .2s ease both",
+                  }}>
+                    <div style={{ color: C.muted, fontSize: 12, lineHeight: 1.7, fontFamily: "DM Sans, sans-serif" }}>
+                      {item.a}
+                    </div>
+                  </div>
+                )}
+              </Glass>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── AUTH SCREEN ─── */
+const Typewriter = ({ text, delay = 0, speed = 55 }) => {
+  const [idx, setIdx] = useState(0);
+  const [started, setStarted] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setStarted(true), delay); return () => clearTimeout(t); }, [delay]);
+  useEffect(() => {
+    if (!started || idx >= text.length) return;
+    const t = setTimeout(() => setIdx(i => i + 1), speed);
+    return () => clearTimeout(t);
+  }, [started, idx, text, speed]);
+  const done = idx >= text.length;
+  return (
+    <span style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", fontStyle: "italic" }}>
+      {text.slice(0, idx)}<span style={{ opacity: done ? 0 : 1, animation: "auth-cursor-blink .7s step-end infinite", transition: "opacity .4s", borderRight: `1.5px solid ${C.muted}`, marginLeft: 1 }}>&thinsp;</span>
+    </span>
+  );
+};
+
+const AuthScreen = ({ onAuth }) => {
+  const t = useT();
+  const [step, setStep] = useState(0);
+  const [showWordmark, setShowWordmark] = useState(false);
+  const [showFeatures, setShowFeatures] = useState(false);
+  const [showBtn, setShowBtn] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setShowWordmark(true), 1200);
+    const t2 = setTimeout(() => setShowFeatures(true), 2000);
+    const t3 = setTimeout(() => setShowBtn(true), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, []);
+
+  const handleLogin = () => {
+    setStep(1);
+    setTimeout(() => { setStep(2); setTimeout(() => onAuth(), 1000); }, 1600);
+  };
+
+  return (
+    <div className="full-h" style={{
+      background: C.navy, display: "flex", flexDirection: "column", alignItems: "center",
+      padding: "0 36px calc(28px + env(safe-area-inset-bottom))", fontFamily: "DM Sans, sans-serif",
+      overflow: "hidden",
+    }}>
+      <div style={{ flex: 1.3 }} />
+
+      {/* Logo area - crossfade from X to wordmark */}
+      {step === 0 && (
+        <div style={{ marginBottom: 44, position: "relative", display: "flex", alignItems: "center", justifyContent: "center", minHeight: 100 }}>
+          {/* X icon */}
+          <img src={LOGO_B64} alt="X" width={88} height={88} style={{
+            objectFit: "contain", position: showWordmark ? "absolute" : "relative",
+            animation: showWordmark ? "auth-fade-out .6s ease forwards" : "auth-fade-in 1s cubic-bezier(.4,0,.2,1) forwards, auth-glow-pulse 2.5s ease infinite",
+          }} />
+          {/* Full wordmark */}
+          {showWordmark && (
+            <img src={WORDMARK_B64} alt="SpendX" style={{
+              width: 250, height: "auto", objectFit: "contain",
+              animation: "auth-fade-in .8s cubic-bezier(.4,0,.2,1) forwards",
+            }} />
+          )}
+        </div>
+      )}
+
+      {/* Connecting / Connected states */}
+      {step === 1 && (
+        <div style={{ textAlign: "center", marginBottom: 44 }}>
+          <div style={{ width: 40, height: 40, borderRadius: "50%", border: `2px solid ${C.cardBorder}33`, borderTopColor: "#2AABEE", animation: "spin .9s linear infinite", margin: "0 auto 14px" }} />
+          <div style={{ color: C.silver, fontSize: 13 }}>{t("connecting")}</div>
+        </div>
+      )}
+      {step === 2 && (
+        <div style={{ textAlign: "center", marginBottom: 44, animation: "auth-fade-in .4s ease" }}>
+          <div style={{ width: 48, height: 48, borderRadius: "50%", background: `${C.green}10`, border: `1.5px solid ${C.green}30`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+            <Ico d={ic.check} size={24} color={C.green} sw={2.5} />
+          </div>
+          <div style={{ color: C.white, fontSize: 15, fontWeight: 600 }}>{t("welcome")}</div>
+        </div>
+      )}
+
+      {/* Features */}
+      {step === 0 && showFeatures && (
+        <div style={{ width: "100%", maxWidth: 300 }}>
+          {[
+            { icon: "card", text: "Virtual & Physical Cards", color: C.hoverAccent },
+            { icon: "topup", text: "Crypto Top-Up (USDT/USDC +)", color: C.green },
+            { icon: "shield", text: "Secure & Non-Custodial", color: C.amber },
+          ].map((f, i) => (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 14, marginBottom: 16,
+              animation: `auth-slide-up .55s cubic-bezier(.4,0,.2,1) ${i * 0.15}s both`,
+            }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 10,
+                background: `${f.color}08`, border: `1px solid ${f.color}15`,
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <Ico d={ic[f.icon]} size={17} color={f.color} />
+              </div>
+              <span style={{ color: C.silver, fontSize: 13.5, fontWeight: 500 }}>{f.text}</span>
+            </div>
+          ))}
+          <div style={{ textAlign: "center", marginTop: 4, minHeight: 18 }}>
+            <Typewriter text="And much more coming soon" delay={600} speed={45} />
+          </div>
+        </div>
+      )}
+
+      <div style={{ flex: 1 }} />
+
+      {/* Button */}
+      {step === 0 && showBtn && (
+        <div style={{ width: "100%", maxWidth: 340, animation: "auth-slide-up .6s cubic-bezier(.4,0,.2,1) forwards" }}>
+          <button className="pill-btn" onClick={handleLogin} style={{
+            width: "100%", padding: "15px 24px", borderRadius: 14,
+            background: "linear-gradient(135deg, #2AABEE, #229ED9)", border: "none",
+            color: "#fff", fontSize: 15.5, fontWeight: 700, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            animation: "auth-btn-glow 3s ease 1s infinite",
+          }}>
+            Login with Telegram
+          </button>
+          <div style={{ marginTop: 14, textAlign: "center", animation: "auth-slide-up .4s ease .2s both" }}>
+            <span style={{ color: C.muted, fontSize: 10.5, lineHeight: 1.6 }}>
+              By continuing, you agree to our<br/>
+              <span className="link-glow" style={{ color: C.accent2 }}>Terms of Service</span>
+              {" & "}
+              <span className="link-glow" style={{ color: C.accent2 }}>Privacy Policy</span>
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ─── KYC SHEET ─── */
+const KYCSheet = ({ onClose, kycStatus, setKycStatus, showToast }) => {
+  const t = useT();
+  const statuses = {
+    not_started: { label: t("notStarted"), color: C.muted, icon: "user", desc: t("kycDescNotStarted") },
+    pending: { label: t("inReview"), color: C.amber, icon: "eye", desc: t("kycDescPending") },
+    verified: { label: t("verified"), color: C.green, icon: "shield", desc: t("kycDescVerified") },
+  };
+  const s = statuses[kycStatus];
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("kycVerification")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+      <div style={{ padding: 20 }}>
+
+        {/* Status header */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: "50%",
+            background: `${s.color}12`, border: `2px solid ${s.color}30`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 14px",
+            boxShadow: `0 0 24px ${s.color}15`,
+          }}>
+            <Ico d={ic[s.icon]} size={32} color={s.color} />
+          </div>
+          <Badge text={s.label} color={s.color} />
+          <div style={{ color: C.muted, fontSize: 12, fontFamily: "DM Sans, sans-serif", marginTop: 10, lineHeight: 1.5, padding: "0 10px" }}>{s.desc}</div>
+        </div>
+
+        {/* Progress steps */}
+        <Glass style={{ padding: "4px 0", marginBottom: 18, overflow: "hidden" }}>
+          {[
+            { step: t("accountCreated"), done: true },
+            { step: t("personalInfo"), done: kycStatus !== "not_started" },
+            { step: t("docUpload"), done: kycStatus !== "not_started" },
+            { step: t("idVerification"), done: kycStatus === "verified" },
+          ].map((st, i) => (
+            <div key={st.step} style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "13px 16px",
+              borderBottom: i < 3 ? `1px solid ${C.gridSep}33` : "none",
+            }}>
+              <div style={{
+                width: 24, height: 24, borderRadius: "50%", flexShrink: 0,
+                background: st.done ? `${C.green}20` : `${C.cardBorder}20`,
+                border: `1.5px solid ${st.done ? C.green + "50" : C.cardBorder + "44"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {st.done ? <Ico d={ic.check} size={12} color={C.green} sw={2.5} /> :
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.cardBorder }} />}
+              </div>
+              <span style={{ color: st.done ? C.silver : C.muted, fontSize: 13, fontFamily: "DM Sans, sans-serif", fontWeight: st.done ? 500 : 400 }}>{st.step}</span>
+            </div>
+          ))}
+        </Glass>
+
+        {/* Requirements */}
+        {kycStatus === "not_started" && (
+          <>
+            <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>{t("whatYouNeed")}</div>
+            <Glass style={{ padding: "4px 0", marginBottom: 18, overflow: "hidden" }}>
+              {[
+                { icon: "📄", text: t("reqPassport") },
+                { icon: "🤳", text: t("reqSelfie") },
+              ].map((r, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "12px 16px",
+                  borderBottom: i < 1 ? `1px solid ${C.gridSep}33` : "none",
+                }}>
+                  <span style={{ fontSize: 16 }}>{r.icon}</span>
+                  <span style={{ color: C.silver, fontSize: 12, fontFamily: "DM Sans, sans-serif" }}>{r.text}</span>
+                </div>
+              ))}
+            </Glass>
+
+            <PillBtn bg={C.yellow} color={C.navy} full onClick={() => {
+              setKycStatus("pending");
+              showToast(t("kycSubmitted"));
+            }}>
+              {t("startVerif")}
+            </PillBtn>
+
+            <div style={{ textAlign: "center", marginTop: 12 }}>
+              <span style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif" }}>{t("takes5min")} • Powered by Sumsub</span>
+            </div>
+          </>
+        )}
+
+        {kycStatus === "pending" && (
+          <>
+            <Glass style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, border: `1px solid ${C.amber}25`, background: `${C.amber}06`, marginBottom: 16 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+                border: `2px solid ${C.amber}40`, borderTopColor: C.amber,
+                animation: "spin .8s linear infinite",
+              }} />
+              <div>
+                <div style={{ color: C.silver, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("verifInProgress")}</div>
+                <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginTop: 2 }}>{t("verifUsually")}</div>
+              </div>
+            </Glass>
+
+            {/* Demo: simulate approval */}
+            <OutlineBtn onClick={() => { setKycStatus("verified"); showToast(t("kycVerified")); }} style={{ justifyContent: "center" }}>
+              <Ico d={ic.check} size={14} color={C.green} /> {t("simApproval")}
+            </OutlineBtn>
+          </>
+        )}
+
+        {kycStatus === "verified" && (
+          <>
+            <Glass style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, border: `1px solid ${C.green}25`, background: `${C.green}06`, marginBottom: 20 }}>
+              <Ico d={ic.check} size={16} color={C.green} sw={2.5} />
+              <span style={{ color: C.silver, fontSize: 13, fontFamily: "DM Sans, sans-serif" }}>{t("fullAccessMsg")}</span>
+            </Glass>
+            <PillBtn bg={C.yellow} color={C.navy} full onClick={onClose}>
+              <Ico d={ic.card} size={18} color={C.navy} sw={2} /> {t("orderSpendx")}
+            </PillBtn>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ─── SKIN PICKER ─── */
+const SkinPickerSheet = ({ card, onClose, cardSkins, setCardSkins, showToast }) => {
+  const t = useT();
+  const fileRef = useRef(null);
+  const hasCustom = cardSkins[card.id];
+
+  const applySkin = (dataUrl, isLight) => {
+    setCardSkins(prev => ({ ...prev, [card.id]: { url: dataUrl, light: isLight } }));
+    showToast(`${card.tier} skin updated!`);
+    onClose();
+  };
+
+  const resetSkin = () => {
+    setCardSkins(prev => { const n = { ...prev }; delete n[card.id]; return n; });
+    showToast(`${card.tier} - default skin restored`);
+    onClose();
+  };
+
+  // Analyze image brightness via canvas sampling
+  const analyzeBrightness = (canvas) => {
+    const ctx = canvas.getContext("2d");
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let total = 0, count = 0;
+    // Sample every 20th pixel for speed
+    for (let i = 0; i < data.length; i += 80) {
+      total += data[i] * 0.299 + data[i+1] * 0.587 + data[i+2] * 0.114; // luminance
+      count++;
+    }
+    return (total / count) > 128; // true = light image (needs dark text)
+  };
+
+  const handleFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { showToast("Please select an image file"); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const targetRatio = 1.586;
+        let sw = img.width, sh = img.height;
+        let sx = 0, sy = 0;
+        if (sw / sh > targetRatio) { sw = sh * targetRatio; sx = (img.width - sw) / 2; }
+        else { sh = sw / targetRatio; sy = (img.height - sh) / 2; }
+        const canvas = document.createElement("canvas");
+        canvas.width = 680; canvas.height = 428;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 680, 428);
+        const isLight = analyzeBrightness(canvas);
+        applySkin(canvas.toDataURL("image/jpeg", 0.82), isLight);
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="sheet-anim" style={{ background: C.navy, minHeight: "100%", paddingBottom: 30 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", borderBottom: `1px solid ${C.gridSep}44` }}>
+        <CircleBtn icon="back" color={C.panelLight} iconColor={C.silver} size={34} shadow={false} onClick={onClose} />
+        <span style={{ flex: 1, textAlign: "center", color: C.white, fontSize: 15, fontWeight: 600, fontFamily: "DM Sans, sans-serif" }}>{t("changeSkin")}</span>
+        <div style={{ width: 34 }} />
+      </div>
+
+      <div style={{ padding: 20 }}>
+        {/* Current skin */}
+        <div style={{ color: C.muted, fontSize: 11, fontFamily: "DM Sans, sans-serif", marginBottom: 10 }}>
+          {hasCustom ? `${t("currentSkin")}: ${t("customImg")}` : `${t("currentSkin")}: ${card.tier} ${t("defaultSkin")}`}
+        </div>
+        <div style={{
+          height: 100, borderRadius: 16, overflow: "hidden", position: "relative", marginBottom: 6,
+          border: `2px solid ${C.yellow}50`, boxShadow: `0 0 16px ${C.yellow}15`,
+        }}>
+          {hasCustom ? (
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${hasCustom.url})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+          ) : (
+            <CircuitBg seed={card.id + 100} color={card.color} />
+          )}
+          <div style={{ position: "absolute", top: 8, left: 12, display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: "rgba(255,255,255,.5)", fontSize: 9, letterSpacing: 2, fontFamily: "DM Sans, sans-serif" }}>SPENDX</span>
+            <span style={{ color: "#fff", fontSize: 14, fontWeight: 800, fontFamily: "DM Sans, sans-serif", textShadow: "0 1px 4px rgba(0,0,0,.4)" }}>{card.tier}</span>
+          </div>
+          <span style={{ position: "absolute", bottom: 8, right: 12, color: "rgba(255,255,255,.5)", fontSize: 14, fontWeight: 800, fontStyle: "italic", letterSpacing: 2, fontFamily: "DM Sans, sans-serif" }}>VISA</span>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: `${C.cardBorder}30`, margin: "18px 0" }} />
+
+        {/* Upload custom */}
+        <div style={{ color: C.white, fontSize: 13, fontWeight: 600, fontFamily: "DM Sans, sans-serif", marginBottom: 12 }}>{t("uploadOwn")}</div>
+        <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
+        <PillBtn bg={C.yellow} color={C.navy} full onClick={() => fileRef.current?.click()}>
+          <Ico d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" size={16} color={C.navy} /> Upload from Gallery
+        </PillBtn>
+
+        {/* Reset if has custom */}
+        {hasCustom && (
+          <button className="pill-btn glass-btn" onClick={resetSkin} style={{
+            width: "100%", marginTop: 10, padding: "12px 20px", borderRadius: 50,
+            background: "transparent", border: `1px solid ${C.cardBorder}66`,
+            color: C.muted, fontSize: 13, fontWeight: 500,
+            fontFamily: "DM Sans, sans-serif", cursor: "pointer",
+          }}>{t("resetDefault")}</button>
+        )}
+
+        {/* Specs */}
+        <Glass style={{ marginTop: 20, padding: 14 }}>
+          <div style={{ color: C.amber, fontSize: 11, fontWeight: 700, fontFamily: "DM Sans, sans-serif", marginBottom: 8 }}>{t("recSpecs")}</div>
+          <div style={{ color: C.muted, fontSize: 10, fontFamily: "DM Sans, sans-serif", lineHeight: 1.8 }}>
+            <span style={{ color: C.silver }}>Size:</span> 680 x 428 px (auto-resized from any photo)<br/>
+            <span style={{ color: C.silver }}>Ratio:</span> 1.586 : 1 (auto-cropped to fit)<br/>
+            <span style={{ color: C.silver }}>Format:</span> JPEG, PNG, WebP or camera photo<br/>
+            <span style={{ color: C.silver }}>Tip:</span> Text color adapts automatically to your image
+          </div>
+        </Glass>
+      </div>
+    </div>
+  );
+};
+
+export default function SpendXMVP3() {
+  const [authed, setAuthed] = useState(false);
+  const [kycStatus, setKycStatus] = useState("not_started"); // not_started | pending | verified
+  const [ownedCards, setOwnedCards] = useState([]); // array of card objects (cloned from CARD_TYPES)
+  const [tab, setTab] = useState("home");
+  const [sheet, setSheet] = useState(null);
+  const [activeCard, setActiveCard] = useState(null);
+  const [lang, setLang] = useState("en");
+  const [hidden, setHidden] = useState(false);
+  const [lockedCards, setLockedCards] = useState(new Set());
+  const [cardSkins, setCardSkins] = useState({});
+  const [skinPickerCard, setSkinPickerCard] = useState(null);
+  const [tutorialDone, setTutorialDone] = useState({ empty: false, home: false });
+  const [showTutorial, setShowTutorial] = useState(null); // null | "empty" | "home"
+  const scrollRef = useRef(null);
+  const cardIdCounter = useRef(100);
+  const [tgTop, setTgTop] = useState(0);
+  const [toast, setToast] = useState(null);
+  const [toastKey, setToastKey] = useState(0);
+  const [langDDPos, setLangDDPos] = useState(null);
+  const openLangDD = (e) => {
+    const btnEl = e?.currentTarget?.parentElement || e?.target;
+    if (!btnEl) return;
+    const appEl = document.querySelector('.full-h');
+    const ar = appEl ? appEl.getBoundingClientRect() : { top: 0, left: 0, width: window.innerWidth };
+    const br = btnEl.getBoundingClientRect();
+    setLangDDPos({ top: br.bottom - ar.top + 4, right: Math.max(8, ar.width - (br.right - ar.left)) });
+  };
+  const showToast = (msg) => { setToast(msg); setToastKey(k => k + 1); setTimeout(() => setToast(null), 2300); };
+
+  const myCards = ownedCards;
+  const orderCard = (tierId) => {
+    if (kycStatus !== "verified") { showToast("Complete KYC first"); return false; }
+    const tier = CARD_TYPES.find(c => c.id === tierId);
+    if (!tier) return false;
+    if (ownedCards.length >= 20) { showToast("Maximum 20 cards"); return false; }
+    cardIdCounter.current += 1;
+    const newCard = {
+      ...tier,
+      id: cardIdCounter.current,
+      last4: String(Math.floor(1000 + Math.random() * 9000)),
+      balance: "$0.00",
+      tx: (tier.tx || []).map(tx => ({ ...tx })),
+    };
+    setOwnedCards(prev => [...prev, newCard]);
+    setActiveCard(newCard); // always switch to the newly ordered card
+    showToast(`${tier.tier} ${tl("cardOrdered")}`);
+    return true;
+  };
+
+  // Keep activeCard in sync with myCards - if active card is stale or missing, fix it
+  useEffect(() => {
+    if (myCards.length > 0 && (!activeCard || !myCards.find(c => c.id === activeCard.id))) {
+      setActiveCard(myCards[0]);
+    }
+  }, [myCards.length]);
+
+  // Telegram WebApp integration
+  useEffect(() => {
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        tg.setHeaderColor("#091428");
+        tg.setBackgroundColor("#091428");
+        tg.disableVerticalSwipes?.();
+        tg.enableClosingConfirmation?.();
+        if (tg.themeParams?.bg_color) {
+          document.body.style.background = tg.themeParams.bg_color;
+        }
+        // Safe area offset below Telegram header
+        const calcTop = () => {
+          const api = (tg.safeAreaInset?.top || 0) + (tg.contentSafeAreaInset?.top || 0);
+          return api > 0 ? api : 56; // fallback for older Bot API without contentSafeAreaInset
+        };
+        setTgTop(calcTop());
+        tg.onEvent?.("viewportChanged", () => setTgTop(calcTop()));
+        tg.onEvent?.("safeAreaChanged", () => setTgTop(calcTop()));
+        tg.onEvent?.("contentSafeAreaChanged", () => setTgTop(calcTop()));
+      }
+    } catch (e) {}
+  }, []);
+  const nav = t => { setTab(t); setSheet(null); };
+  const openSheet = (s) => { setSheet(s); };
+
+  // Reset scroll to top when content changes - fires after React render + browser paint
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    });
+  }, [sheet, tab]);
+  const labels = { home: "Home", card: "Cards", settings: "Settings", topup: "Top Up", history: "History", shop: "Card Shop", faq: "FAQ" };
+  const openSkinPicker = (card) => { setSkinPickerCard(card); setSheet("skinPicker"); };
+
+  // Local translator (reads lang state directly - works outside LangCtx.Provider)
+  const tl = (key) => T[key]?.[lang] || T[key]?.en || key;
+
+  // Tutorial steps config - fully translated
+  const TUTORIAL_EMPTY = [
+    { id: "balance", title: tl("tutBalance"), desc: tl("tutBalanceDesc"), pos: "below", pad: 10 },
+    { id: "lang-switcher", title: tl("tutLang"), desc: tl("tutLangDesc"), pos: "below", pad: 8 },
+    { id: "order-card", title: tl("tutOrderCard"), desc: tl("tutOrderCardDesc"), pos: "below", pad: 8 },
+    { id: "live-prices-empty", title: tl("tutLivePrices"), desc: tl("tutLivePricesDesc"), pos: "above", pad: 6 },
+    { id: "support-faq-empty", title: tl("tutSupportFaq"), desc: tl("tutSupportFaqDesc"), pos: "above", pad: 6 },
+    { id: "tab-bar", title: tl("tutNav"), desc: tl("tutNavDesc"), pos: "above", pad: 6 },
+  ];
+  const TUTORIAL_HOME = [
+    { id: "active-card", title: tl("tutActiveCard"), desc: tl("tutActiveCardDesc"), pos: "below", pad: 6 },
+    { id: "quick-actions", title: tl("tutQuickActions"), desc: tl("tutQuickActionsDesc"), pos: "below", pad: 6 },
+    { id: "recent-activity", title: tl("tutRecentActivity"), desc: tl("tutRecentActivityDesc"), pos: "above", pad: 10 },
+    { id: "topup-stable", title: tl("tutTopUpStable"), desc: tl("tutTopUpStableDesc"), pos: "above", pad: 8 },
+  ];
+
+  // Auto-trigger tutorials
+  useEffect(() => {
+    if (!authed) return;
+    if (myCards.length === 0 && !tutorialDone.empty && !showTutorial) {
+      setTimeout(() => setShowTutorial("empty"), 600);
+    }
+  }, [authed, myCards.length, tutorialDone.empty]);
+
+  useEffect(() => {
+    if (myCards.length > 0 && !tutorialDone.home && !showTutorial && tab === "home" && !sheet) {
+      setTimeout(() => setShowTutorial("home"), 600);
+    }
+  }, [myCards.length, tutorialDone.home, tab, sheet]);
+
+  const completeTutorial = (phase) => {
+    setTutorialDone(prev => ({ ...prev, [phase]: true }));
+    setShowTutorial(null);
+    // Force iOS WebKit to recalculate scroll state after tutorial overlay unmounts
+    // The click blocker during tutorial can leave the scroll container in a broken state
+    requestAnimationFrame(() => {
+      const sr = scrollRef.current;
+      if (sr) {
+        const prevOverflow = sr.style.overflow;
+        sr.style.overflow = "hidden";
+        requestAnimationFrame(() => {
+          sr.style.overflow = prevOverflow || "";
+          if (!sr.style.overflow) sr.style.removeProperty("overflow");
+          sr.scrollTop = 0;
+        });
+      }
+    });
+  };
+  const screens = {
+    home: <HomeScreen onNav={nav} onSheet={openSheet} activeCard={activeCard} hidden={hidden} setHidden={setHidden} setActiveCard={setActiveCard} showToast={showToast} myCards={myCards} lockedCards={lockedCards} cardSkins={cardSkins} openSkinPicker={openSkinPicker} lang={lang} setLang={setLang} openLangDD={openLangDD} />,
+    card: <CardScreen activeCard={activeCard} setActiveCard={setActiveCard} hidden={hidden} setHidden={setHidden} lockedCards={lockedCards} setLockedCards={setLockedCards} showToast={showToast} kycStatus={kycStatus} myCards={myCards} onSheet={openSheet} cardSkins={cardSkins} openSkinPicker={openSkinPicker} lang={lang} setLang={setLang} openLangDD={openLangDD} />,
+    settings: <SettingsScreen lang={lang} setLang={setLang} showToast={showToast} kycStatus={kycStatus} setKycStatus={setKycStatus} />,
+  };
+  const sheets = {
+    topup: activeCard ? <TopUpSheet onClose={() => setSheet(null)} activeCard={activeCard} onTopUp={(amount, coin, netName, addr, totalSent, declined) => {
+      const now = new Date();
+      const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      const timeStr = `${monthNames[now.getMonth()]} ${now.getDate()}, ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+      const newTx = {
+        name: "Card Top Up",
+        amount: `$${amount.toFixed(2)}`,
+        type: "in",
+        time: timeStr,
+        st: declined ? "declined" : "settled",
+        usdt: totalSent,
+        net: netName,
+        from: addr.slice(0, 8) + "..." + addr.slice(-4),
+        token: coin,
+      };
+      setOwnedCards(prev => prev.map(c => {
+        if (c.id !== activeCard.id) return c;
+        const oldBal = parseFloat(c.balance.replace(/[$,]/g, "")) || 0;
+        const newBal = declined ? oldBal : oldBal + amount;
+        return { ...c, balance: "$" + newBal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tx: [newTx, ...(c.tx || [])] };
+      }));
+      // Update activeCard reference
+      setActiveCard(prev => {
+        if (!prev || prev.id !== activeCard.id) return prev;
+        const oldBal = parseFloat(prev.balance.replace(/[$,]/g, "")) || 0;
+        const newBal = declined ? oldBal : oldBal + amount;
+        return { ...prev, balance: "$" + newBal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), tx: [newTx, ...(prev.tx || [])] };
+      });
+    }} /> : null,
+    history: activeCard ? <HistorySheet onClose={() => setSheet(null)} activeCard={activeCard} myCards={myCards} /> : null,
+    shop: <CardShopSheet onClose={() => setSheet(null)} orderCard={orderCard} ownedCards={ownedCards} kycStatus={kycStatus} setKycStatus={setKycStatus} showToast={showToast} />,
+    faq: <FAQSheet onClose={() => setSheet(null)} />,
+    skinPicker: skinPickerCard ? <SkinPickerSheet card={skinPickerCard} onClose={() => { setSkinPickerCard(null); setSheet(null); }} cardSkins={cardSkins} setCardSkins={setCardSkins} showToast={showToast} /> : null,
+  };
+
+  // Auth gate
+  if (!authed) return (
+    <LangCtx.Provider value={lang}>
+      <style>{css}{`html,body,#root{background:${C.navy}!important;overscroll-behavior:none}body{position:fixed;width:100%;overflow:hidden}`}</style>
+      <AuthScreen onAuth={() => setAuthed(true)} />
+    </LangCtx.Provider>
+  );
+
+  return (
+    <LangCtx.Provider value={lang}>
+    <div className="full-h" style={{ background: C.navy, fontFamily: "DM Sans, sans-serif", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative", maxWidth: "100vw" }}>
+      <style>{css}{`html,body,#root{background:${C.navy}!important;overscroll-behavior:none}body{position:fixed;width:100%;overflow:hidden}`}</style>
+      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflow: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}>
+        {tgTop > 0 && <div style={{ height: tgTop, flexShrink: 0, pointerEvents: "none" }} />}
+        {sheet && sheets[sheet] ? sheets[sheet] : screens[tab]}
+      </div>
+      <TabBar active={tab} onNav={nav} />
+      {/* Tutorial overlays */}
+      {showTutorial === "empty" && (
+        <TutorialOverlay
+          steps={TUTORIAL_EMPTY}
+          welcomeTitle={tl("tutWelcome")}
+          welcomeDesc={tl("tutWelcomeDesc")}
+          doneTitle={tl("tutReadyTitle")}
+          doneDesc={tl("tutReadyDesc")}
+          onComplete={() => completeTutorial("empty")}
+          scrollRef={scrollRef}
+          lang={lang} setLang={setLang}
+        />
+      )}
+      {showTutorial === "home" && (
+        <TutorialOverlay
+          steps={TUTORIAL_HOME}
+          welcomeTitle={tl("tutCardReady")}
+          welcomeDesc={tl("tutCardReadyDesc")}
+          doneTitle={tl("tutAllSet")}
+          doneDesc={tl("tutAllSetDesc")}
+          onComplete={() => completeTutorial("home")}
+          scrollRef={scrollRef}
+          lang={lang} setLang={setLang}
+          showLangPicker={false}
+        />
+      )}
+      {/* Language dropdown - rendered at root level for proper z-index */}
+      <LangDropdown lang={lang} setLang={setLang} pos={langDDPos} onClose={() => setLangDDPos(null)} />
+      {/* Toast */}
+      {toast && (
+        <div key={toastKey} className="toast-anim" style={{
+          position: "absolute", top: 16 + tgTop, left: "50%", transform: "translateX(-50%)",
+          background: `${C.panel}ee`, backdropFilter: "blur(12px)",
+          border: `1px solid ${C.yellow}30`, borderRadius: 50,
+          padding: "8px 20px", display: "flex", alignItems: "center", gap: 8,
+          boxShadow: `0 4px 20px rgba(0,0,0,.4), 0 0 12px ${C.yellow}15`,
+          zIndex: 999, pointerEvents: "none",
+        }}>
+          <Ico d={ic.check} size={12} color={C.yellow} sw={2.5} />
+          <span style={{ color: C.silver, fontSize: 12, fontWeight: 500, fontFamily: "DM Sans, sans-serif", whiteSpace: "nowrap" }}>{toast}</span>
+        </div>
+      )}
+    </div>
+    </LangCtx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<SpendXMVP3 />);
